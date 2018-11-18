@@ -1,0 +1,13 @@
+receptor = receptor/receptor3.pdbqt
+
+center_x =  55.519
+center_y =  31.403
+center_z =  3.382
+
+size_x = 102
+size_y = 60
+size_z = 90
+
+num_modes = 10
+
+exhaustiveness = 16

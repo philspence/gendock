@@ -1,0 +1,2 @@
+O=c1[nH]c(-c2cc(F)c(F)cc2F)nc2c(-c3cc(F)c(F)cc3F)nn(-c3cc(F)c(F)cc3F)c12
+Fc1cc(F)c(F)cc1C2=NC(C(c3cc(F)c(F)cc3F)=NN4c5cc(F)c(F)cc5F)=C4N=C2

@@ -1,0 +1,11 @@
+receptor = receptor/receptor1.pdbqt
+
+center_x =  -13.562
+center_y =  -9.924
+center_z =  -15.627
+
+size_x = 36
+size_y = 30
+size_z = 36
+
+num_modes = 10

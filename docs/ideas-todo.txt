@@ -1,0 +1,30 @@
+-properly test each FG to make sure there are no syntax errors in their strings
+
+-incorporate autodock in v2
+--prepare_receptor4
+---prepare_receptor4.py -r filename
+---do once only
+--prepare_ligand4
+---prepare_ligand4.py -l filename
+--prepare_gpf4
+---prepare_gpf4.py -l pdbqt_file -r pdbqt_file
+--prepare_dpf4
+---prepare_dpf4.py -l pdbqt_file -r pdbqt_file
+--autogrid4
+---autogrid4 -p my_receptor.gpf -l my_receptor.glg &
+--autodock4
+---autodock4 -p my_docking.dpf -l my_docking.dlg &
+
+-add python3.6 and RDKit env into the MolDock dir
+--copy the moldock-env from conda
+--run from run.sh by calling the python installed in moldock-env on moldock.py
+
+import os
+dir = os.path.dirname(__file__)
+filename = os.path.join(dir, 'relative','path','to','file','you','want')
+
+add mgltools and autodock-vina folders for all 3 OS OR create different version for each OS
+
+-use conda to install openbabel, pybel, mgltools & autodock-vina, import them from python
+
+-export as xyz, edit xyz for the 6Ns and then form pdb (deleting the xyz files), optimise & convert to pdbqt
