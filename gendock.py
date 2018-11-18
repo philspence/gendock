@@ -40,11 +40,17 @@ if args.ligand_num == 1:
             writer.writerow(headers)
 
 if platform == 'linux':
-    path_to_py_scripts = os.path.join('tools', 'mgltools_x86_64Linux_1.5.6', 'MGLToolsPckgs', 'AutoDockTools', 'Utilities24')
+    mgltools = os.path.join('tools', 'mgltools_x86_64Linux_1.5.6')
 elif platform == 'linux2':
-    path_to_py_scripts = os.path.join('tools', 'mgltools_x86_64Linux2_1.5.6', 'MGLToolsPckgs', 'AutoDockTools', 'Utilities24')
+    mgltools = os.path.join('tools', 'mgltools_x86_64Linux2_1.5.6')
 elif platform == 'darwin':
-    path_to_py_scripts = os.path.join('tools', 'mgltools_i86Darwin9_1.5.6', 'MGLToolsPckgs', 'AutoDockTools', 'Utilities24')
+    mgltools = os.path.join('tools', 'mgltools_i86Darwin9_1.5.6')
+else:
+    print("You're not running a compatible OS")
+    exit()
+
+path_to_py_scripts = os.path.join(mgltools, 'MGLToolsPckgs', 'AutoDockTools', 'Utilities24')
+pythonsh = os.path.join(mgltools, 'bin', 'pythonsh')
 
 if args.gen == 1:
     molgenerate(args.xp_name, args.num_mols, args.target_mass, args.input_smiles)
@@ -57,13 +63,14 @@ num = 1
 while num <= args.num_recept:
     receptor_pdb = os.path.join('receptor', "receptor"+str(num)+".pdb")
     receptor_pdbqt = receptor_pdb.replace("pdb", "pdbqt")
-    os.system("pythonsh "+str(path_to_py_scripts)+"prepare_receptor4.py -U nphs_lps_waters -r "+str(receptor_pdb)+" -o "+str(receptor_pdbqt))
+    command = pythonsh+' '+path_to_py_scripts
+    os.system(command+"prepare_receptor4.py -U nphs_lps_waters -r "+eceptor_pdb+" -o "+receptor_pdbqt)
     num += 1
 print("Finished preparing receptors.")
     
 #dock and process or skip all together if the user just wants to generate molecules
 if args.dock_opt == 1:
-    moldocking(args.xp_name, args.num_mols, args.num_recept, path_to_py_scripts, args.ligand_num)
+    moldocking(args.xp_name, args.num_mols, args.num_recept, path_to_py_scripts, args.ligand_num, pythonsh)
     #process_mols(args.xp_name, args.num_mols, args.num_recept)
 else:
     print("Docking option was to skip...")

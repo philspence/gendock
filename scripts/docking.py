@@ -65,7 +65,7 @@ def process(molpdb, r_num, l_num, xp_num):
             writer = csv.writer(f, delimiter=",")
             writer.writerow(temp_array)
 
-def moldocking(xp_num, num_mols, num_recept, path_to_py_scripts, start_ligand):
+def moldocking(xp_num, num_mols, num_recept, path_to_py_scripts, start_ligand, pythonsh):
     data_path = os.path.join('data', xp_num)
     ligand_num = start_ligand
     while ligand_num <= num_mols:
@@ -82,7 +82,8 @@ def moldocking(xp_num, num_mols, num_recept, path_to_py_scripts, start_ligand):
         print("Converting to pdbqt...")
         try:
             prep_ligand = os.path.join(path_to_py_scripts, 'prepare_ligand4.py')
-            os.system("pythonsh "+prep_ligand+" -l "+str(ligand_pdb)+" -o "+str(ligand_pdbqt))
+            command = pythonsh+" "+prep_ligand
+            os.system(command+" -l "+ligand_pdb+" -o "+ligand_pdbqt)
             print("Done.")
         except:
             print("Failed. Skipping ligand...")
@@ -95,10 +96,10 @@ def moldocking(xp_num, num_mols, num_recept, path_to_py_scripts, start_ligand):
         while recept_num <= num_recept:
             #run vina
             print("Docking ligand "+str(ligand_num)+" with receptor "+str(recept_num)+"...")
-            f_out_pdbqt = os.path.join(str(vina_files_dir),'ligand_'+str(ligand_num)+"-r_"+str(recept_num)+".pdbqt")
-            f_out_log = os.path.join(str(vina_files_dir), "ligand_"+str(ligand_num)+"-r_"+str(recept_num)+".txt")
+            f_out_pdbqt = os.path.join(vina_files_dir,'ligand_'+str(ligand_num)+"-r_"+str(recept_num)+".pdbqt")
+            f_out_log = os.path.join(vina_files_dir, "ligand_"+str(ligand_num)+"-r_"+str(recept_num)+".txt")
             try:
-                vina_command = "vina --config receptor/r"+str(recept_num)+"-vina-config.txt --ligand "+str(ligand_pdbqt)+" --out "+str(f_out_pdbqt)+" --log "+str(f_out_log)
+                vina_command = "vina --config receptor/r"+str(recept_num)+"-vina-config.txt --ligand "+ligand_pdbqt+" --out "+f_out_pdbqt+" --log "+f_out_log
             except:
                 recept_num += 1
             os.system(vina_command)
