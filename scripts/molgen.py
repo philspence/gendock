@@ -63,7 +63,7 @@ def replace_R(mol, fg, fg_mass, mol_m, cap):
     return (mol, mol_mass)
 
 #MOLECULE GENERATION
-def molgenerate(xp_num, num_mols, target_mass, input_smiles, ff):
+def molgenerate(xp_num, num_mols, target_mass, input_smiles):
         mass_gap = 75
         preT_target_mass = target_mass - mass_gap
         ligand_num = 0
@@ -108,9 +108,9 @@ def molgenerate(xp_num, num_mols, target_mass, input_smiles, ff):
             print("Optimizing Geometry")
             opt = 1
             while opt > 0:
-                if ff == "MMFF94":
+                try:
                     opt = AllChem.MMFFOptimizeMolecule(output_mol)
-                else:
+                except:
                     opt = AllChem.UFFOptimizeMolecule(output_mol)
             print("Done.")
             #make dir if doesn't exist
