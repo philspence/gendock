@@ -77,11 +77,11 @@ If you make any significant edits or add new functional groups, please contact m
 ## Extra Tools
 GenDock includes some extra tools such as the **smiles-to-pdb.py** sctript that will convert the SMILES strings saved on each line of the **smiles-strings.txt** file to PDBs and store them for use in the **tools/PDBmols** directory. This is launched the same way as GenDock (within the Conda environment):
 ```
-python3.5 smiles-to-pdb.py
+python smiles-to-pdb.py
 ```
 GenDock can also convert SDF files containing multiple molecules to individual PDBs for screening (useful for something like the NCI library). To tell the script which SDF file to use, use the argument -f to define the filename:
 ```
-python3.5 sdf-to-pdb.py -f filename.sdf
+python sdf-to-pdb.py -f filename.sdf
 ```
 These PDBs will be saved in the **tools/PDBmols** directory.
 
