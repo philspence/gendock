@@ -15,7 +15,7 @@ parser.add_argument('-r', dest='num_recept', metavar='X', help='number of recept
 parser.add_argument('-m', dest='target_mass', metavar='XXX', help='target mass of the generated molecules, default = 400', required=False, type=int, default='400')
 parser.add_argument('-i', dest='input_smiles', metavar='SMILES String', help='SMILES string of starting molecule, default is to generate from scratch, see readme for more details', default=int('0'), required=False)
 parser.add_argument('-d', dest='dock_opt', metavar="0 or 1", help='1 (default) will dock the molecules, 0 will skip this', type=int, default=int('1'), required=False)
-parser.add_argument('-f', dest='force_field', metavar="FORCEFIELD", help='enter forcefield you want to minimize with: MMFF94 (default) or UFF', default='MMFF94')
+#parser.add_argument('-f', dest='force_field', metavar="FORCEFIELD", help='enter forcefield you want to minimize with: MMFF94 (default) or UFF', default='MMFF94')
 parser.add_argument('-g', dest='gen', metavar='0 or 1', help='1 (default) will generate, 0 will skip this and use PDB files in the data folder', type=int, default=int('1'))
 parser.add_argument('-l', dest='ligand_num', metavar='NUMBER', help='1 (default) will start from the beginning, enter another ligand number to start from there', type=int, default=int('1'))
 parser.add_argument('--version', action='version', version='moldock_v0.10')
@@ -39,12 +39,15 @@ if args.ligand_num == 1:
             writer = csv.writer(f, delimiter=",")
             writer.writerow(headers)
 
-if platform == 'linux' or platform == 'linux2':
+if platform == 'linux':
+    path_to_py_scripts = os.path.join('tools', 'mgltools_x86_64Linux_1.5.6', 'MGLToolsPckgs', 'AutoDockTools', 'Utilities24')
+elif platform == 'linux2':
     path_to_py_scripts = os.path.join('tools', 'mgltools_x86_64Linux2_1.5.6', 'MGLToolsPckgs', 'AutoDockTools', 'Utilities24')
 elif platform == 'darwin':
     path_to_py_scripts = os.path.join('tools', 'mgltools_i86Darwin9_1.5.6', 'MGLToolsPckgs', 'AutoDockTools', 'Utilities24')
+
 if args.gen == 1:
-    molgenerate(args.xp_name, args.num_mols, args.target_mass, args.input_smiles, args.force_field)
+    molgenerate(args.xp_name, args.num_mols, args.target_mass, args.input_smiles)
 else:
     print('Finding PDB files instead of generating molecules')
 
