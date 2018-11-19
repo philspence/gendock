@@ -39,9 +39,8 @@ if args.ligand_num == 1:
             writer = csv.writer(f, delimiter=",")
             writer.writerow(headers)
 
-if platform == 'linux':
-    mgltools = os.path.join('tools', 'mgltools_x86_64Linux_1.5.6')
-elif platform == 'linux2':
+platform = sys.platform
+if platform == 'linux' or platform == 'linux2':
     mgltools = os.path.join('tools', 'mgltools_x86_64Linux2_1.5.6')
 elif platform == 'darwin':
     mgltools = os.path.join('tools', 'mgltools_i86Darwin9_1.5.6')
@@ -63,8 +62,8 @@ num = 1
 while num <= args.num_recept:
     receptor_pdb = os.path.join('receptor', "receptor"+str(num)+".pdb")
     receptor_pdbqt = receptor_pdb.replace("pdb", "pdbqt")
-    command = pythonsh+' '+path_to_py_scripts
-    os.system(command+"prepare_receptor4.py -U nphs_lps_waters -r "+eceptor_pdb+" -o "+receptor_pdbqt)
+    command = pythonsh+' '+path_to_py_scripts+'/prepare_receptor4.py'
+    os.system(command+" -U nphs_lps_waters -r "+receptor_pdb+" -o "+receptor_pdbqt)
     num += 1
 print("Finished preparing receptors.")
     
