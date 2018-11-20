@@ -64,6 +64,7 @@ def replace_R(mol, fg, fg_mass, mol_m, cap):
 
 #MOLECULE GENERATION
 def molgenerate(xp_num, num_mols, target_mass, input_smiles):
+        mols = []
         mass_gap = 75
         preT_target_mass = target_mass - mass_gap
         ligand_num = 0
@@ -90,17 +91,8 @@ def molgenerate(xp_num, num_mols, target_mass, input_smiles):
             #increase the nums
             targets_gen += 1
             to_gen +=1
-            #make filenames
-            ligand_name = "ligand_"
-            ligand_num += 1
-            ligand_name_pdb = os.path.join('data', xp_num, 'output_mols', str(ligand_name+str(ligand_num)+".pdb")) #e.g. 'output_mols/ligand_1.pdb'
-            ligand_name_sdf = ligand_name_pdb.replace('pdb', 'sdf')
-            temp_pdb = ligand_name_pdb.replace(str(ligand_name+str(ligand_num)), "temp")
-            
             #get mol from SMILES
             new_mol = Chem.MolFromSmiles(mol_smiles)
-            #print(mol_smiles)
-            #add Hs and embed before PDB
             print(mol_smiles)
             print("Adding hydrogens...")
             output_mol = AllChem.AddHs(new_mol)
@@ -113,13 +105,12 @@ def molgenerate(xp_num, num_mols, target_mass, input_smiles):
                 except:
                     opt = AllChem.UFFOptimizeMolecule(output_mol)
             print("Done.")
-            #make dir if doesn't exist
-            data_path = os.path.join('data', xp_num, 'output_mols')
-            if not os.path.isdir(data_path):
-                os.makedirs(data_path)
-            print("Saving ligand_"+str(ligand_num))
-            Chem.MolToPDBFile(output_mol, ligand_name_pdb)
-            print("Done.")
-                
-
+            mols.append(output_mol)
+        sdf_file = os.path.join('data', xp_num, str(xp_num)+'.sdf')
+        writer = Chem.SDWriter('test.sdf')
+        for m in mols:
+            writer.write(m)
+        if not os.path.exists(os.path.join('data', xp_num)):
+            os.makedirs(os.path.join('data', xp_num))
+        os.rename('test.sdf', sdf_file)
 	

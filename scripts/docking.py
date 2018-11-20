@@ -65,47 +65,52 @@ def process(molpdb, r_num, l_num, xp_num):
             writer = csv.writer(f, delimiter=",")
             writer.writerow(temp_array)
 
-def moldocking(xp_num, num_mols, num_recept, path_to_py_scripts, start_ligand, pythonsh):
-    data_path = os.path.join('data', xp_num)
+def makedir(dir):
+    if not os.path.isdir(dir):
+        os.makedirs(dir)
+
+def moldocking(xp_num, num_recept, path_to_py_scripts, start_ligand, pythonsh):
+    data_dir = os.path.join('data', xp_num)
+    vina_path = os.path.join(data_dir, 'vina_ligands')
+    makedir(vina_path)
+    vina_files_dir = os.path.join(data_dir, 'vina_files')
+    makedir(vina_files_dir)
+    sdf_file = os.path.join(data_dir, str(xp_num)+'.sdf')
+    pdb_file = os.path.join(data_dir, 'ligand.pdb')
+    pdbqt_file = pdb_file.replace("pdb", "pdbqt")
+    suppl = Chem.SDMolSupplier(sdf_file)
     ligand_num = start_ligand
-    while ligand_num <= num_mols:
-        #set filenames
-        print("Preparing to dock ligand_"+str(ligand_num)+"...")
-        ligand_pdb = os.path.join(data_path, 'output_mols', "ligand_"+str(ligand_num)+".pdb")
-        ligand_pdbqt = ligand_pdb.replace("pdb", "pdbqt")
-        ligand_pdbqt = ligand_pdbqt.replace("output_mols", "vina_ligands")
-        #make dir
-        vina_path = os.path.join(data_path, 'vina_ligands')
-        if not os.path.isdir(vina_path):
-            os.makedirs(vina_path)
-        #prepare ligand with openbabel
-        print("Converting to pdbqt...")
-        try:
-            prep_ligand = os.path.join(path_to_py_scripts, 'prepare_ligand4.py')
-            command = pythonsh+" "+prep_ligand
-            os.system(command+" -l "+ligand_pdb+" -o "+ligand_pdbqt)
-            print("Done.")
-        except:
-            print("Failed. Skipping ligand...")
-            ligand_num += 1
-        #make dirs
-        vina_files_dir = os.path.join(data_path, 'vina_files')
-        if not os.path.isdir(vina_files_dir):
-            os.makedirs(vina_files_dir)
-        recept_num = 1
-        while recept_num <= num_recept:
-            #run vina
-            print("Docking ligand "+str(ligand_num)+" with receptor "+str(recept_num)+"...")
-            f_out_pdbqt = os.path.join(vina_files_dir,'ligand_'+str(ligand_num)+"-r_"+str(recept_num)+".pdbqt")
-            f_out_log = os.path.join(vina_files_dir, "ligand_"+str(ligand_num)+"-r_"+str(recept_num)+".txt")
+    molnum = 1
+    for mol in suppl:
+        if molnum >= ligand_num:
+            Chem.MolToPDBFile(mol, pdb_file)
             try:
-                vina_command = "vina --config receptor/r"+str(recept_num)+"-vina-config.txt --ligand "+ligand_pdbqt+" --out "+f_out_pdbqt+" --log "+f_out_log
+                prep_ligand = os.path.join(path_to_py_scripts, 'prepare_ligand4.py')
+                command = pythonsh+" "+prep_ligand
+                os.system(command+" -l "+pdb_file+" -o "+pdbqt_file)
+                recept_num = 1
+                while recept_num <= num_recept:
+                    # run vina
+                    print("Docking ligand " + str(ligand_num) + " with receptor " + str(recept_num) + "...")
+                    f_out_pdbqt = os.path.join(vina_files_dir, 'ligand_' + str(ligand_num) + '-r_' + str(recept_num) + '.pdbqt')
+                    f_out_log = os.path.join(vina_files_dir, 'ligand_' + str(ligand_num) + '-r_' + str(recept_num) + '.txt')
+                    try:
+                        vina_command = "vina --config receptor/r" + str(recept_num) + "-vina-config.txt --ligand " + pdbqt_file + " --out " + f_out_pdbqt + " --log " + f_out_log
+                        print('Docked.')
+                    except:
+                        recept_num += 1
+                    os.system(vina_command)
+                    recept_num += 1
+                process(pdb_file, num_recept, ligand_num, xp_num)
             except:
-                recept_num += 1
-            os.system(vina_command)
-            recept_num += 1
-        process(ligand_pdb, num_recept, ligand_num, xp_num)
+                print('Failed to prepare ligand '+molnum'. Skipping ligand...')
+                pass
+        else:
+            pass
         ligand_num += 1
+        molnum += 1
+        os.remove(pdb_file)
+        os.remove(pdbqt_file)
         
         
         

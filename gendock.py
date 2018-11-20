@@ -7,10 +7,11 @@ from sys import platform
 from scripts.molgen import *
 from scripts.docking import *
 from scripts.process import *
+from scripts.predict import *
 
 parser = argparse.ArgumentParser()
 parser.add_argument('-x', dest='xp_name', metavar ='NAME', help='enter experiment number/name', required=True)
-parser.add_argument('-n', dest='num_mols', metavar='X', help='number of molecules you want to generate and dock', required=True, type=int)
+parser.add_argument('-n', dest='num_mols', metavar='X', help='number of molecules you want to generate', required=True, type=int)
 parser.add_argument('-r', dest='num_recept', metavar='X', help='number of receptors to dock to, default = 1', required=True, type=int, default='1')
 parser.add_argument('-m', dest='target_mass', metavar='XXX', help='target mass of the generated molecules, default = 400', required=False, type=int, default='400')
 parser.add_argument('-i', dest='input_smiles', metavar='SMILES String', help='SMILES string of starting molecule, default is to generate from scratch, see readme for more details', default=int('0'), required=False)
@@ -18,13 +19,13 @@ parser.add_argument('-d', dest='dock_opt', metavar="0 or 1", help='1 (default) w
 #parser.add_argument('-f', dest='force_field', metavar="FORCEFIELD", help='enter forcefield you want to minimize with: MMFF94 (default) or UFF', default='MMFF94')
 parser.add_argument('-g', dest='gen', metavar='0 or 1', help='1 (default) will generate, 0 will skip this and use PDB files in the data folder', type=int, default=int('1'))
 parser.add_argument('-l', dest='ligand_num', metavar='NUMBER', help='1 (default) will start from the beginning, enter another ligand number to start from there', type=int, default=int('1'))
-parser.add_argument('--version', action='version', version='moldock_v0.10')
+parser.add_argument('--version', action='version', version='moldock_v1.00')
 args = parser.parse_args()
 
-#orig_stdout = sys.stdout
-#log_file = str('data/'+args.xp_name+'/log_'+args.xp_name+'.txt')
-#f = open(log_file, 'w')
-#sys.stdout = f
+orig_stdout = sys.stdout
+log_file = os.path.join('data', args.xp_name, 'log.txt')
+f = open(log_file, 'w')
+sys.stdout = f
 
 if args.ligand_num == 1:
     headers = ["Ligand", "Mw", "LogP", "SMILES"]
@@ -69,13 +70,12 @@ print("Finished preparing receptors.")
     
 #dock and process or skip all together if the user just wants to generate molecules
 if args.dock_opt == 1:
-    moldocking(args.xp_name, args.num_mols, args.num_recept, path_to_py_scripts, args.ligand_num, pythonsh)
-    #process_mols(args.xp_name, args.num_mols, args.num_recept)
+    moldocking(args.xp_name, args.num_recept, path_to_py_scripts, args.ligand_num, pythonsh)
 else:
     print("Docking option was to skip...")
     print("Finished.")
-#print("Saving log file")
-#sys.stdout = orig_stdout
-#f.close()
+print("Saving log file")
+sys.stdout = orig_stdout
+f.close()
 
 
