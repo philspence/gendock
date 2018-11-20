@@ -2,33 +2,28 @@ import argparse
 import os
 import sys
 import csv
-from sys import platform
 
 from scripts.molgen import *
 from scripts.docking import *
-from scripts.process import *
 from scripts.predict import *
 
 parser = argparse.ArgumentParser()
 parser.add_argument('-x', dest='xp_name', metavar ='NAME', help='enter experiment number/name', required=True)
-parser.add_argument('-n', dest='num_mols', metavar='X', help='number of molecules you want to generate', required=True, type=int)
-parser.add_argument('-r', dest='num_recept', metavar='X', help='number of receptors to dock to, default = 1', required=True, type=int, default='1')
-parser.add_argument('-m', dest='target_mass', metavar='XXX', help='target mass of the generated molecules, default = 400', required=False, type=int, default='400')
-parser.add_argument('-i', dest='input_smiles', metavar='SMILES String', help='SMILES string of starting molecule, default is to generate from scratch, see readme for more details', default=int('0'), required=False)
-parser.add_argument('-d', dest='dock_opt', metavar="0 or 1", help='1 (default) will dock the molecules, 0 will skip this', type=int, default=int('1'), required=False)
-#parser.add_argument('-f', dest='force_field', metavar="FORCEFIELD", help='enter forcefield you want to minimize with: MMFF94 (default) or UFF', default='MMFF94')
-parser.add_argument('-g', dest='gen', metavar='0 or 1', help='1 (default) will generate, 0 will skip this and use PDB files in the data folder', type=int, default=int('1'))
-parser.add_argument('-l', dest='ligand_num', metavar='NUMBER', help='1 (default) will start from the beginning, enter another ligand number to start from there', type=int, default=int('1'))
+parser.add_argument('-n', dest='num_mols', metavar='X', help='number of molecules you want to generate, enter 0 if you want to skip generating', required=True, type=int)
+parser.add_argument('-r', dest='num_recept', metavar='X', help='number of receptors to dock to, enter 0 if you want to skip docking', required=True, type=int)
+parser.add_argument('-m', dest='target_mass', metavar='XXX', help='target mass of the generated molecules, default = 400', type=int, default='400')
+parser.add_argument('-i', dest='input_smiles', metavar='SMILES String', help='SMILES string of starting molecule, default is to generate from scratch, see readme for more details', default=int('0'))
+parser.add_argument('-l', dest='ligand_num', metavar='NUMBER', help='1 (default) will start from the first molecule in the library, enter another ligand number to start from there', type=int, default=int('1'))
 parser.add_argument('--version', action='version', version='moldock_v1.00')
 args = parser.parse_args()
 
-orig_stdout = sys.stdout
-log_file = os.path.join('data', args.xp_name, 'log.txt')
-f = open(log_file, 'w')
-sys.stdout = f
+# orig_stdout = sys.stdout
+# log_file = os.path.join('data', args.xp_name, 'log.txt')
+# f = open(log_file, 'w')
+# sys.stdout = f
 
 if args.ligand_num == 1:
-    headers = ["Ligand", "Mw", "LogP", "SMILES"]
+    headers = ["Ligand", "Mw", "LogP", "SMILES", "NSC"]
     r_count = 1
     csv_fname = str(args.xp_name)+"_results.csv"
     csv_file = os.path.join('data', args.xp_name, csv_fname)
@@ -52,10 +47,10 @@ else:
 path_to_py_scripts = os.path.join(mgltools, 'MGLToolsPckgs', 'AutoDockTools', 'Utilities24')
 pythonsh = os.path.join(mgltools, 'bin', 'pythonsh')
 
-if args.gen == 1:
+if args.num_mols > 0:
     molgenerate(args.xp_name, args.num_mols, args.target_mass, args.input_smiles)
 else:
-    print('Finding PDB files instead of generating molecules')
+    print('Finding SDF file instead of generating molecules')
 
 #prepare receptors
 print("Preparing receptors...")
@@ -69,13 +64,14 @@ while num <= args.num_recept:
 print("Finished preparing receptors.")
     
 #dock and process or skip all together if the user just wants to generate molecules
-if args.dock_opt == 1:
+if args.num_recept > 0:
     moldocking(args.xp_name, args.num_recept, path_to_py_scripts, args.ligand_num, pythonsh)
 else:
     print("Docking option was to skip...")
     print("Finished.")
-print("Saving log file")
-sys.stdout = orig_stdout
-f.close()
+
+# print("Saving log file")
+# sys.stdout = orig_stdout
+# f.close()
 
 

@@ -10,6 +10,8 @@ GenDock is only supported on macOS and Linux. Windows users can install Ubuntu u
 
 I recommend using [Anaconda](https://www.anaconda.com/download) to setup your python environment. After installing conda, run the install script ***install.py*** to setup GenDock. This script will setup the conda environment, install MGLTools and add the command for pythonsh to either your .bashrc or .bash_profile, depending on your OS. GenDock will not work without these.
 
+Alternatively, you can manage your own python packages, in which case, ensure python version is 3.5.6 and you have the *rdkit* module installed.
+
 
 ## Preparing Receptors
 
@@ -47,10 +49,10 @@ Using the -h command will bring up the list of required arguments.
 This is the name of the experiment, all files will be saved the **data** directory. GenDock will create a directory with the name of the experiment that is given by this argument, e.g. **data/experiment1** if the argument **-x experiment1** is given.
 
 #### Number of molecules to generate or dock (-n) *required*
-This is the number of molecules to generate or dock. You can skip generating molecules if necessary (for example in the case where you already have a library of molecules), see the -g argument below.
+This is the number of molecules to generate or dock. You can skip generating molecules if necessary (for example in the case where you already have a library of molecules) by running with value ```0```. These molecules will be stored in an SDF file located in the data directory for that experiment. When skipping generaation of molecules, ensure that there is an SDF file from the library you want to screen (e.g. the NCI library) inside the data directory of the experiment and it is named *"experiment_name".sdf*.
 
 #### Number of receptors (-r) *required*
-GenDock will use as many receptors as you define, comparison of binding is easy using the CSV file generated. Make sure each receptor has its own vina configuration file. GenDock will then prepare the receptors for AutoDock Vina automatically before docking ligands.
+GenDock will use as many receptors as you define, comparison of binding is easy using the CSV file generated. Make sure each receptor has its own vina configuration file. GenDock will then prepare the receptors for AutoDock Vina automatically before docking ligands. To skip docking use the value ```0```.
 
 #### Mass of molecules to generate (-m) *default = 400*
 Use this argument to define the size of molecules that you wish to generate. The default is 400, this value is always an estimate, the mass will have a range of about 100, so for 400 you will most likely get a range of 350-450.
@@ -58,18 +60,12 @@ Use this argument to define the size of molecules that you wish to generate. The
 #### SMILES string of input molecule (-i)
 GenDock can generate molecules from scratch or it can use an input molecule in the form of a SMILES string. An example is ``` Nc1nc(c2ccc(NC([*])=O)cn2)cs1 ``` where ``` [*] ``` denotes the position of functionalisation. ChemDraw (and other programs) have the ability to copy structures as SMILES strings (Ctr + Alt + C), set the functionalisation site to be labelled as **A** instead of **R** to have ```[*]``` in the SMILES string. Find an example molecule in the **input_mol** directory.
 
-#### To Dock or not to Dock (-d) *default = 1*
-Tell GenDock whether you want to dock (default) or to skip docking with (-d 0) if you just want to use GenDock to just generate a library of compounds.
-
-#### Generate molecules or use existing library (-g) *default = 1*
-Use this to tell GenDock to generate its own molecules (default) or to skip this and use a preexisting library (-g 0). Move the PDB files of the library into the **data/exp_name/output_mols** directory before running GenDock.
-
 #### Tell GenDock which ligand to start at (-l) *default = 1*
 If you are running large libraries, it can be useful to use this option if you are cut off for some reason halfway through a screen. Simply use this to tell GenDock which ligand was the last one to be screened and it will continue from there instead of starting again from ligand 1.
 
 ## Results
 
-GenDock will save a CSV file in the **data/exp_name/** directory that will contain the ligand number, SMILES string and the best binding energy for each receptor. GenDock stores the results of the AutoDock Vina screening in the **vina_files** directory. Inside each directory is both the PDBQT files and the LOG file. These are named as **ligand_X-r_Y.pdbqt or .txt** where X is the ligand number and Y is the receptor number.
+GenDock will save a CSV file in the **data/exp_name/** directory that will contain the SMILES string of the ligand as well as other chemical properies, and the best binding energy for each receptor. GenDock stores the results of the AutoDock Vina screening in the **vina_files** directory. Inside each directory is both the PDBQT files and the LOG file. These are named as **ligand_X-r_Y.pdbqt or .txt** where X is the ligand number and Y is the receptor number.
 
 ## Editing
 If you make any significant edits or add new functional groups, please contact me so I can try to incorporate these into the next version of GenDock.
@@ -77,11 +73,11 @@ If you make any significant edits or add new functional groups, please contact m
 ## Extra Tools
 GenDock includes some extra tools such as the **smiles-to-pdb.py** sctript that will convert the SMILES strings saved on each line of the **smiles-strings.txt** file to PDBs and store them for use in the **tools/PDBmols** directory. This is launched the same way as GenDock (within the Conda environment):
 ```
-python smiles-to-pdb.py
+python3.5 smiles-to-pdb.py
 ```
 GenDock can also convert SDF files containing multiple molecules to individual PDBs for screening (useful for something like the NCI library). To tell the script which SDF file to use, use the argument -f to define the filename:
 ```
-python sdf-to-pdb.py -f filename.sdf
+python3.5 sdf-to-pdb.py -f filename.sdf
 ```
 These PDBs will be saved in the **tools/PDBmols** directory.
 

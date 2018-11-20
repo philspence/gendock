@@ -102,15 +102,15 @@ def molgenerate(xp_num, num_mols, target_mass, input_smiles):
             while opt > 0:
                 try:
                     opt = AllChem.MMFFOptimizeMolecule(output_mol)
-                except:
+                except Exception:
                     opt = AllChem.UFFOptimizeMolecule(output_mol)
             print("Done.")
             mols.append(output_mol)
         sdf_file = os.path.join('data', xp_num, str(xp_num)+'.sdf')
-        writer = Chem.SDWriter('test.sdf')
+        writer = Chem.SDWriter('temp.sdf')
         for m in mols:
             writer.write(m)
         if not os.path.exists(os.path.join('data', xp_num)):
             os.makedirs(os.path.join('data', xp_num))
-        os.rename('test.sdf', sdf_file)
+        os.rename('temp.sdf', sdf_file)
 	
