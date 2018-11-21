@@ -1,7 +1,6 @@
 import random
 import os
-from rdkit import Chem
-from rdkit.Chem import AllChem, Descriptors
+import pybel as pb
 
 from scripts.functional_groups import *
 
@@ -64,6 +63,7 @@ def replace_R(mol, fg, fg_mass, mol_m, cap):
 
 #MOLECULE GENERATION
 def molgenerate(xp_num, num_mols, target_mass, input_smiles):
+        mols = []
         mass_gap = 75
         preT_target_mass = target_mass - mass_gap
         ligand_num = 0
@@ -78,7 +78,8 @@ def molgenerate(xp_num, num_mols, target_mass, input_smiles):
                 mol_mass = fg_nxt.mass
             else: #use the input smiles to start, taken from args entered into moldock.py
                 mol_smiles = input_smiles
-                mol_mass = Descriptors.MolWt(Chem.MolFromSmiles(mol_smiles))
+                tempmol = pb.readstring("smi", mol_smiles)
+                mol_mass = tempmol.molwt
             while mol_mass <= preT_target_mass:
                 fg_nxt = choose_FuncGroup(NT_FuncGroup_list)
                 fg_nxt.smiles = sort_RingNum(fg_nxt.smiles, mol_smiles) # fg_nxt.smiles = ... gets around local and global scopes
@@ -90,36 +91,15 @@ def molgenerate(xp_num, num_mols, target_mass, input_smiles):
             #increase the nums
             targets_gen += 1
             to_gen +=1
-            #make filenames
-            ligand_name = "ligand_"
-            ligand_num += 1
-            ligand_name_pdb = os.path.join('data', xp_num, 'output_mols', str(ligand_name+str(ligand_num)+".pdb")) #e.g. 'output_mols/ligand_1.pdb'
-            ligand_name_sdf = ligand_name_pdb.replace('pdb', 'sdf')
-            temp_pdb = ligand_name_pdb.replace(str(ligand_name+str(ligand_num)), "temp")
-            
             #get mol from SMILES
-            new_mol = Chem.MolFromSmiles(mol_smiles)
-            #print(mol_smiles)
-            #add Hs and embed before PDB
-            print(mol_smiles)
-            print("Adding hydrogens...")
-            output_mol = AllChem.AddHs(new_mol)
-            AllChem.EmbedMolecule(output_mol)
+            new_mol = pb.readstring("smi", mol_smiles)
             print("Optimizing Geometry")
-            opt = 1
-            while opt > 0:
-                try:
-                    opt = AllChem.MMFFOptimizeMolecule(output_mol)
-                except:
-                    opt = AllChem.UFFOptimizeMolecule(output_mol)
-            print("Done.")
-            #make dir if doesn't exist
-            data_path = os.path.join('data', xp_num, 'output_mols')
-            if not os.path.isdir(data_path):
-                os.makedirs(data_path)
-            print("Saving ligand_"+str(ligand_num))
-            Chem.MolToPDBFile(output_mol, ligand_name_pdb)
-            print("Done.")
-                
-
+            newmol.make3D()
+            mols.append(newmol)
+        sdf_path = os.path.join('data', xp_num, str(xp_num)+'.sdf')
+        sdf_file = pb.Outputfile("sdf", sdf_path)
+        if not os.path.exists(os.path.join('data', xp_num)):
+            os.makedirs(os.path.join('data', xp_num))
+        for m in mols:
+            sdf_file.write(m)
 	
