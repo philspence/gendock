@@ -1,5 +1,6 @@
 from rdkit import Chem, DataStructs
 from rdkit.Chem import AllChem
+from rdkit.Chem.Pharm2D import Gobbi_Pharm2D, Generate
 from sklearn.ensemble import RandomForestRegressor
 import numpy as np
 import csv
@@ -10,14 +11,14 @@ import os
 #def learn(input):
 learn_xp = input("Enter data set to learn:")
 pred_xp = input("Enter data set to predict:")
-input_learn = os.path.join('data', learn_xp, learn_xp+'.csv')
+input_learn_csv = os.path.join('data', learn_xp, learn_xp+'.csv')
 pred_file = os.path.join('data', pred_xp, pred_xp+'.sdf')
 
 filename = 'fitted_data.sav'
 
 if not os.path.exists(filename):
     header = []
-    infile = open(input_learn, "r")
+    infile = open(input_learn_csv, "r")
     reader = csv.reader(infile, delimiter=',')
     rownum = 0
     fps = []
@@ -30,7 +31,9 @@ if not os.path.exists(filename):
                 pass
             else:
                 mol = Chem.MolFromSmiles(row[3])
-                fp = AllChem.GetMorganFingerprintAsBitVect(mol, 2)
+                AllChem.EmbedMolecule(mol)
+                factory = Gobbi_Pharm2D.factory
+                fp = AllChem.GetMorganFingerprintAsBitVect(mol, factory, dMat=Chem.Get3DDistanceMatrix(mol))
                 fps.append(fp)
                 nrgs.append(float(row[4]))
         rownum += 1
