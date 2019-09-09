@@ -4,6 +4,8 @@ import pybel as pb
 
 from scripts.functional_groups import *
 
+#todo : change over from pybel to rdkit
+
 def findLargestRingNum(s):
     max_num = 0
     for x in range(len(s)):
@@ -11,9 +13,9 @@ def findLargestRingNum(s):
             max_num = int(s[x])
     return max_num
 
-def choose_FuncGroup(fg_list):
-    fg_nxt = random.choice(fg_list)
-    return fg_nxt
+def choose_FuncGroup(dict):
+    rand = random.choice(list(dict.items()))
+    return rand #rand[0] = smiles, rand[1] = mass
     
 def sort_RingNum(ng, mol_smiles):
     maxring_current = int(findLargestRingNum(mol_smiles))#finds largest num in current mol
@@ -31,34 +33,34 @@ def replace_R(mol, fg, fg_mass, mol_m, cap):
     mol_mass = mol_m + fg_mass
     if "[**]" in mol:
         if cap == 0:
-            fg = choose_FuncGroup(NT_FuncGroup_list)
+            fg = choose_FuncGroup(nt_dict)
         else:
-            fg = choose_FuncGroup(T_FuncGroup_list)
-        mol_smiles = fg.smiles
-        mol_smiles = sort_RingNum(fg.smiles, mol)
+            fg = choose_FuncGroup(t_dict)
+        mol_smiles = fg[0]
+        mol_smiles = sort_RingNum(fg[0], mol)
         mol_smiles = mol_smiles.replace("[*]", "[**]")
         mol = mol.replace("[**]", mol_smiles)#replace incoming group [*] with [**]
-        mol_mass += fg.mass
+        mol_mass += int(fg[1])
     if "[***]" in mol:
         if cap == 0:
-            fg = choose_FuncGroup(NT_FuncGroup_list)
+            fg = choose_FuncGroup(nt_dict)
         else:
-            fg = choose_FuncGroup(T_FuncGroup_list)
-        mol_smiles = fg.smiles
-        mol_smiles = sort_RingNum(fg.smiles, mol)
+            fg = choose_FuncGroup(t_dict)
+        mol_smiles = fg[0]
+        mol_smiles = sort_RingNum(fg[0], mol)
         mol_smiles = mol_smiles.replace("[*]", "[***]")
         mol = mol.replace("[***]", mol_smiles)#replace incoming group [*] with [***]
-        mol_mass += fg.mass
+        mol_mass += int(fg[1])
     if "[****]" in mol:
         if cap == 0:
-            fg = choose_FuncGroup(NT_FuncGroup_list)
+            fg = choose_FuncGroup(nt_dict)
         else:
-            fg = choose_FuncGroup(T_FuncGroup_list)
-        mol_smiles = fg.smiles
-        mol_smiles = sort_RingNum(fg.smiles, mol)
+            fg = choose_FuncGroup(t_dict)
+        mol_smiles = fg[0]
+        mol_smiles = sort_RingNum(fg[0], mol)
         mol_smiles = mol_smiles.replace("[*]", "[****]")
         mol = mol.replace("[****]", mol_smiles) #replace incoming group [*] with [****]
-        mol_mass += fg.mass
+        mol_mass += int(fg[1])
     return (mol, mol_mass)
 
 #MOLECULE GENERATION
@@ -73,21 +75,21 @@ def molgenerate(xp_num, num_mols, target_mass, input_smiles):
             print("Generating molecule "+str(to_gen)+"...")
             to_cap = 0
             if input_smiles == 0: #generate from scratch, default is 0
-                fg_nxt = choose_FuncGroup(S_FuncGroup_list)
-                mol_smiles = fg_nxt.smiles
-                mol_mass = fg_nxt.mass
+                fg_nxt = choose_FuncGroup(s_dict)
+                mol_smiles = fg_nxt[0]
+                mol_mass = int(fg_nxt[1])
             else: #use the input smiles to start, taken from args entered into moldock.py
                 mol_smiles = input_smiles
                 tempmol = pb.readstring("smi", mol_smiles)
                 mol_mass = tempmol.molwt
             while mol_mass <= preT_target_mass:
-                fg_nxt = choose_FuncGroup(NT_FuncGroup_list)
-                fg_nxt.smiles = sort_RingNum(fg_nxt.smiles, mol_smiles) # fg_nxt.smiles = ... gets around local and global scopes
-                (mol_smiles, mol_mass) = replace_R(mol_smiles, fg_nxt.smiles, fg_nxt.mass, mol_mass, to_cap)
+                fg_nxt = choose_FuncGroup(nt_dict)
+                fg_nxt[0] = sort_RingNum(fg_nxt[0], mol_smiles) # fg_nxt[0] = ... gets around local and global scopes
+                (mol_smiles, mol_mass) = replace_R(mol_smiles, fg_nxt[0], int(fg_nxt[1]), mol_mass, to_cap)
             to_cap = 1
-            fg_nxt = choose_FuncGroup(T_FuncGroup_list)
-            fg_nxt.smiles = sort_RingNum(fg_nxt.smiles, mol_smiles)
-            (mol_smiles, mol_mass) = replace_R(mol_smiles, fg_nxt.smiles, fg_nxt.mass, mol_mass, to_cap)          
+            fg_nxt = choose_FuncGroup(t_dict)
+            fg_nxt[0] = sort_RingNum(fg_nxt[0], mol_smiles)
+            (mol_smiles, mol_mass) = replace_R(mol_smiles, fg_nxt[0], int(fg_nxt[1]), mol_mass, to_cap)          
             #increase the nums
             targets_gen += 1
             to_gen +=1

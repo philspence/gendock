@@ -64,7 +64,7 @@ print("Finished preparing receptors.")
     
 #dock and process or skip all together if the user just wants to generate molecules
 if args.num_recept > 0:
-    moldocking(args.xp_name, args.num_recept, path_to_py_scripts, args.ligand_num, pythonsh)
+    moldocking(args.xp_name, args.num_recept, path_to_py_scripts, args.ligand_num, pythonsh, args.num_mols)
 else:
     print("Docking option was to skip...")
     print("Finished.")
