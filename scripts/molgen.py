@@ -1,10 +1,9 @@
 import random
 import os
-import pybel as pb
+from rdkit import Chem
+from rdkit.Chem import AllChem
 
 from scripts.functional_groups import *
-
-#todo : change over from pybel to rdkit
 
 def findLargestRingNum(s):
     max_num = 0
@@ -80,7 +79,7 @@ def molgenerate(xp_num, num_mols, target_mass, input_smiles):
                 mol_mass = int(fg_nxt[1])
             else: #use the input smiles to start, taken from args entered into moldock.py
                 mol_smiles = input_smiles
-                tempmol = pb.readstring("smi", mol_smiles)
+                tempmol = Chem.MolFromSmiles(mol_smiles)
                 mol_mass = tempmol.molwt
             while mol_mass <= preT_target_mass:
                 fg_nxt = choose_FuncGroup(nt_dict)
@@ -94,14 +93,16 @@ def molgenerate(xp_num, num_mols, target_mass, input_smiles):
             targets_gen += 1
             to_gen +=1
             #get mol from SMILES
-            new_mol = pb.readstring("smi", mol_smiles)
-            print("Optimizing Geometry")
-            newmol.make3D()
-            mols.append(newmol)
+            mol = Chem.MolFromSmiles(mol_smiles)
+            print("Optimizing Geometry...")
+            AllChem.EmbedMolecule(mol)
+            AllChem.UFFOptimizeMolecule(mol, maxIters=500)
+            mols.append(mol)
+            print("Molecule saved.")
         sdf_path = os.path.join('data', xp_num, str(xp_num)+'.sdf')
-        sdf_file = pb.Outputfile("sdf", sdf_path)
         if not os.path.exists(os.path.join('data', xp_num)):
             os.makedirs(os.path.join('data', xp_num))
+        writer = Chem.SDWriter(sdf_path)
         for m in mols:
-            sdf_file.write(m)
-	
+            writer.write(m)
+        writer.flush()

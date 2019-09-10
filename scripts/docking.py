@@ -13,16 +13,16 @@ def get_energy(file_name):
     result = float(line.split(':')[1].split()[0])  
     return result
 
-def save_learn_data(mol, ligand_file, xp_num):
-    AllChem.EmbedMolecule(mol)
-    factory = Gobbi_Pharm2D.factory
-    fp = AllChem.GetMorganFingerprintAsBitVect(mol, factory, dMat=Chem.Get3DDistanceMatrix(mol))
-    nrg = get_energy(ligand_file)
-    row = [fp, nrg]
-    learn_csv = str(xp_num)+"_learn_data.csv"
-    with open(learn_csv, "a") as f:
-        writer = csv.writer(f, delimiter=',')
-        writer.writerow(row)
+# def save_learn_data(mol, ligand_file, xp_num):
+#     AllChem.EmbedMolecule(mol)
+#     factory = Gobbi_Pharm2D.factory
+#     fp = AllChem.GetMorganFingerprintAsBitVect(mol, factory, dMat=Chem.Get3DDistanceMatrix(mol))
+#     nrg = get_energy(ligand_file)
+#     row = [fp, nrg]
+#     learn_csv = str(xp_num)+"_learn_data.csv"
+#     with open(learn_csv, "a") as f:
+#         writer = csv.writer(f, delimiter=',')
+#         writer.writerow(row)
 
 
 def process(mol, r_num, l_num, xp_num):
@@ -30,8 +30,8 @@ def process(mol, r_num, l_num, xp_num):
     temp_array = []
     recept_num = 1
     temp_array.append('ligand_'+str(l_num))
-    temp_array.append(Descriptors.MolWt(mol)
-    temp_array.append(Descriptors.MolLogP(mol)))
+    temp_array.append(Descriptors.MolWt(mol))
+    temp_array.append(Descriptors.MolLogP(mol))
     temp_array.append(Chem.MolToSmiles(mol))
     if mol.HasProp('NSC'):
         temp_array.append(mol.GetProp('NSC'))
@@ -48,7 +48,7 @@ def process(mol, r_num, l_num, xp_num):
         writer.writerow(temp_array)
     print("Ligand attributes and binding energy acquired and appended to csv file")
     print("Learning molecule data...")
-    save_learn_data(mol, ligand_file, xp_num)
+    # save_learn_data(mol, ligand_file, xp_num)
 
 def makedir(dir):
     if not os.path.isdir(dir):
@@ -103,7 +103,7 @@ def moldocking(xp_num, num_recept, path_to_py_scripts, start_ligand, pythonsh, t
             if molnum >= start_ligand:
                 try:
                     AllChem.EmbedMolecule(mol)
-                    AllChem.UFFOptimizeMolecule(mol, numThreads=0)
+                    AllChem.UFFOptimizeMolecule(mol)
                     AllChem.MolToPDBFile(mol, pdb_file)
                     dock(pdb_file, pdbqt_file, num_recept, vina_files_dir, molnum, path_to_py_scripts, pythonsh)
                     os.remove(pdb_file)

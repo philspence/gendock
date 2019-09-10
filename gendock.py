@@ -43,6 +43,15 @@ else:
     print("You're not running a compatible OS")
     exit()
 
+try:
+    if not os.path.isdir(mgltools):
+        print("mgltools cannot be found, fatal error")
+        exit()
+    else:
+        pass
+except:
+    exit()
+
 path_to_py_scripts = os.path.join(mgltools, 'MGLToolsPckgs', 'AutoDockTools', 'Utilities24')
 pythonsh = os.path.join(mgltools, 'bin', 'pythonsh')
 
