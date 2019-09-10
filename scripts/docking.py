@@ -2,7 +2,7 @@ import os
 import numpy as np
 import csv
 from rdkit import Chem
-from rdkit.Chem import AllChem, Descriptors, DataStructs
+from rdkit.Chem import AllChem, Descriptors
 from rdkit.Chem.Pharm2D import Gobbi_Pharm2D, Generate
 
 def get_energy(file_name):
@@ -12,18 +12,6 @@ def get_energy(file_name):
     line = lines[1] 
     result = float(line.split(':')[1].split()[0])  
     return result
-
-# def save_learn_data(mol, ligand_file, xp_num):
-#     AllChem.EmbedMolecule(mol)
-#     factory = Gobbi_Pharm2D.factory
-#     fp = AllChem.GetMorganFingerprintAsBitVect(mol, factory, dMat=Chem.Get3DDistanceMatrix(mol))
-#     nrg = get_energy(ligand_file)
-#     row = [fp, nrg]
-#     learn_csv = str(xp_num)+"_learn_data.csv"
-#     with open(learn_csv, "a") as f:
-#         writer = csv.writer(f, delimiter=',')
-#         writer.writerow(row)
-
 
 def process(mol, r_num, l_num, xp_num):
     print("Trying to acquire ligand attributes and binding energy...")
@@ -47,8 +35,6 @@ def process(mol, r_num, l_num, xp_num):
         writer = csv.writer(f, delimiter=",")
         writer.writerow(temp_array)
     print("Ligand attributes and binding energy acquired and appended to csv file")
-    print("Learning molecule data...")
-    # save_learn_data(mol, ligand_file, xp_num)
 
 def makedir(dir):
     if not os.path.isdir(dir):

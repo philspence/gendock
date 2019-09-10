@@ -4,7 +4,6 @@ from rdkit.Chem.Pharm2D import Gobbi_Pharm2D, Generate
 from sklearn.ensemble import RandomForestRegressor
 import numpy as np
 import csv
-import pybel as pb
 import pickle
 import os
 
@@ -16,8 +15,7 @@ pred_file = os.path.join('data', pred_xp, pred_xp+'.sdf')
 
 filename = 'fitted_data.sav'
 
-if not os.path.exists(filename):
-    header = []
+if not os.path.exists(filename): #looks to find if the data has been processed already
     infile = open(input_learn_csv, "r")
     reader = csv.reader(infile, delimiter=',')
     rownum = 0
@@ -33,7 +31,7 @@ if not os.path.exists(filename):
                 mol = Chem.MolFromSmiles(row[3])
                 AllChem.EmbedMolecule(mol)
                 factory = Gobbi_Pharm2D.factory
-                fp = AllChem.GetMorganFingerprintAsBitVect(mol, factory, dMat=Chem.Get3DDistanceMatrix(mol))
+                fp = Generate.Gen2DFingerprint(mol, factory, dMat=Chem.Get3DDistanceMatrix(mol))
                 fps.append(fp)
                 nrgs.append(float(row[4]))
         rownum += 1
@@ -46,26 +44,27 @@ if not os.path.exists(filename):
         np_fps.append(arr)
     print('Fitting data...')
     rf.fit(np_fps, nrgs)
-    pickle.dump(rf, open(filename, 'wb'))
+    pickle.dump(rf, open(filename, 'wb')) #creates file
 else:
     print('Found fitted data file')
-    rf = pickle.load(open(filename, 'rb'))
+    rf = pickle.load(open(filename, 'rb')) #loads file
 
 print('Getting SDF mols')
 # input_pred = Chem.SDMolSupplier('NCI-Open_2012-05-01.sdf')
 
 input_pred = []
-for mol in pb.readfile("sdf", pred_file):
-    smi = mol.write('smi')
+suppl = Chem.SDMolSupplier(pred_file)
+for mol in suppl:
+    smi = Chem.MolToSmiles(mol)
     input_pred.append(smi)
 
-header = []
 fps_p = []
 nrgs_p = []
 
 for m in input_pred:
     mol = Chem.MolFromSmiles(m)
-    fp = AllChem.GetMorganFingerprintAsBitVect(mol, 2)
+    factory = Gobbi_Pharm2D.factory
+    fp = Generate.Gen2DFingerprint(mol, factory, dMat=Chem.Get3DDistanceMatrix(mol))
     arr = np.zeros((1,))
     DataStructs.ConvertToNumpyArray(fp, arr)
     fps_p.append(arr)
