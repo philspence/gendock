@@ -4,6 +4,18 @@ import csv
 from rdkit import Chem
 from rdkit.Chem import AllChem, Descriptors
 from rdkit.Chem.Pharm2D import Gobbi_Pharm2D, Generate
+import subprocess
+
+def osCommand(command):
+    c  = subprocess.Popen(command, shell=True)
+    try:
+        c.wait()
+    except subprocess.TimeoutExpired:
+        print("Command timed out")
+        c.kill()
+        pass
+    except Exception:
+        pass
 
 def get_energy(file_name):
     file = open(file_name) 
@@ -43,7 +55,7 @@ def makedir(dir):
 def dock(pdb_file, pdbqt_file, num_recept, vina_files_dir, molnum, path_to_py_scripts, pythonsh):
     prep_ligand = os.path.join(path_to_py_scripts, 'prepare_ligand4.py')
     command = pythonsh + " " + prep_ligand
-    os.system(command + " -l " + pdb_file + " -o " + pdbqt_file)
+    osCommand(str(command + " -l " + pdb_file + " -o " + pdbqt_file))
     recept_num = 1
     while recept_num <= num_recept:
         # run vina
@@ -53,7 +65,7 @@ def dock(pdb_file, pdbqt_file, num_recept, vina_files_dir, molnum, path_to_py_sc
         try:
             vina_command = "vina --config receptor/r" + str(
                 recept_num) + "-vina-config.txt --ligand " + pdbqt_file + " --out " + f_out_pdbqt + " --log " + f_out_log
-            os.system(vina_command)
+            osCommand(vina_command)
         except Exception:
             pass
         recept_num += 1
@@ -71,13 +83,13 @@ def moldocking(xp_num, num_recept, path_to_py_scripts, start_ligand, pythonsh, t
         pdbqt_file = pdbqt_file.replace("output_mols", "vina_ligands")
         try:
             prep_ligand = os.path.join(path_to_py_scripts, 'prepare_ligand4.py')
-            os.system("pythonsh "+prep_ligand+" -l "+str(pdb_file)+" -o "+str(pdbqt_file))
+            osCommand(str("pythonsh "+prep_ligand+" -l "+str(pdb_file)+" -o "+str(pdbqt_file)))
             print("Done.")
         except:
             print("Failed. Skipping ligand...")
             molnum += 1
         dock(pdb_file, pdbqt_file, num_recept, vina_files_dir, molnum, path_to_py_scripts, pythonsh)
-        mol = AllChem.MolFromPDBFile(pdb_file)  #EDIT TO RDKIT
+        mol = AllChem.MolFromPDBFile(pdb_file)
         process(mol, num_recept, molnum, xp_num)
 
     else: #run SDF file
