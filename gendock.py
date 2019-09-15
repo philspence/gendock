@@ -9,7 +9,7 @@ from scripts.docking import *
 
 parser = argparse.ArgumentParser()
 parser.add_argument('-x', dest='xp_name', metavar ='NAME', help='enter experiment number/name', required=True)
-parser.add_argument('-n', dest='num_mols', metavar='X', help='number of molecules you want to generate, enter 0 if you want to skip generating', required=True, type=int)
+parser.add_argument('-g', dest='gen', metavar='X', help='enter 0 if you want to skip generating, default is to generate', type=int, default=1)
 parser.add_argument('-r', dest='num_recept', metavar='X', help='number of receptors to dock to, enter 0 if you want to skip docking', required=True, type=int)
 parser.add_argument('-m', dest='target_mass', metavar='XXX', help='target mass of the generated molecules, default = 400', type=int, default='400')
 parser.add_argument('-i', dest='input_smiles', metavar='SMILES String', help='SMILES string of starting molecule, default is to generate from scratch, see readme for more details', default=int('0'))
@@ -31,7 +31,9 @@ if args.ligand_num == 1:
         r_header = str("Receptor "+str(r_count)+" Binding Affinity (kcal/mol)")
         headers.append(r_header)
         r_count += 1
-    with open(csv_file, "w+") as f:
+    if not os.path.exists(os.path.join('data', args.xp_name)):
+        os.mkdir(os.path.join('data', args.xp_name))
+    with open(csv_file, "a") as f:
             writer = csv.writer(f, delimiter=",")
             writer.writerow(headers)
 
@@ -56,8 +58,8 @@ except:
 path_to_py_scripts = os.path.join(mgltools, 'MGLToolsPckgs', 'AutoDockTools', 'Utilities24')
 pythonsh = os.path.join(mgltools, 'bin', 'pythonsh')
 
-if args.num_mols > 0:
-    molgenerate(args.xp_name, args.num_mols, args.target_mass, args.input_smiles)
+if args.gen > 0:
+    molgenerate(args.xp_name, args.gen, args.target_mass, args.input_smiles)
 else:
     print('Finding SDF file instead of generating molecules')
 

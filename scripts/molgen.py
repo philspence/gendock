@@ -1,5 +1,6 @@
 import random
 import os
+import itertools
 from rdkit import Chem
 from rdkit.Chem import AllChem
 
@@ -15,7 +16,7 @@ def findLargestRingNum(s):
 def choose_FuncGroup(dict):
     rand = random.choice(list(dict.items()))
     return rand #rand[0] = smiles, rand[1] = mass
-    
+
 def sort_RingNum(ng, mol_smiles):
     maxring_current = int(findLargestRingNum(mol_smiles))#finds largest num in current mol
     maxring_new = int(findLargestRingNum(ng))#finds largest num in new group, should always be 1
@@ -26,83 +27,93 @@ def sort_RingNum(ng, mol_smiles):
         ng = ng.replace(str(maxring_new), str(maxring_nxt))#replace 1 in new group to current largest+1
     return ng
 
-def replace_R(mol, fg, fg_mass, mol_m, cap):
-    global mol_mass
+def replace_R(mol, fg):
     mol = mol.replace("[*]", fg)
-    mol_mass = mol_m + fg_mass
     if "[**]" in mol:
-        if cap == 0:
-            fg = choose_FuncGroup(nt_dict)
-        else:
-            fg = choose_FuncGroup(t_dict)
-        mol_smiles = fg[0]
-        mol_smiles = sort_RingNum(fg[0], mol)
+        mol_smiles = fg
+        mol_smiles = sort_RingNum(fg, mol)
         mol_smiles = mol_smiles.replace("[*]", "[**]")
-        mol = mol.replace("[**]", mol_smiles)#replace incoming group [*] with [**]
-        mol_mass += int(fg[1])
+        mol = mol.replace("[**]", mol_smiles) #replace incoming group [*] with [**]
     if "[***]" in mol:
-        if cap == 0:
-            fg = choose_FuncGroup(nt_dict)
-        else:
-            fg = choose_FuncGroup(t_dict)
-        mol_smiles = fg[0]
-        mol_smiles = sort_RingNum(fg[0], mol)
+        mol_smiles = fg
+        mol_smiles = sort_RingNum(fg, mol)
         mol_smiles = mol_smiles.replace("[*]", "[***]")
-        mol = mol.replace("[***]", mol_smiles)#replace incoming group [*] with [***]
-        mol_mass += int(fg[1])
+        mol = mol.replace("[***]", mol_smiles) #replace incoming group [*] with [***]
     if "[****]" in mol:
-        if cap == 0:
-            fg = choose_FuncGroup(nt_dict)
-        else:
-            fg = choose_FuncGroup(t_dict)
-        mol_smiles = fg[0]
-        mol_smiles = sort_RingNum(fg[0], mol)
+        mol_smiles = fg
+        mol_smiles = sort_RingNum(fg, mol)
         mol_smiles = mol_smiles.replace("[*]", "[****]")
         mol = mol.replace("[****]", mol_smiles) #replace incoming group [*] with [****]
-        mol_mass += int(fg[1])
-    return (mol, mol_mass)
+    return mol
+
+def getAverages(dict):
+    tot = 0
+    num = 0
+    for k, v in dict.items():
+        tot += v
+        num += 1
+    avg = tot / num
+    return avg
+
+def createList(dict):
+    list = []
+    for i in dict:
+        list.append(i)
+    return list
+
+def writeMol(mol, sdf_path):
+    writer = Chem.SDWriter(sdf_path)
+    writer.write(mol)
 
 #MOLECULE GENERATION
-def molgenerate(xp_num, num_mols, target_mass, input_smiles):
-        mols = []
-        mass_gap = 75
-        preT_target_mass = target_mass - mass_gap
-        ligand_num = 0
-        to_gen = 1 #number of molecule that needs to be generated (obv start is 1)
-        targets_gen = 0 #how many mols have been gen'd (obv 0 to start)
-        while (targets_gen < num_mols):#keeps going till target is met
-            print("Generating molecule "+str(to_gen)+"...")
-            to_cap = 0
-            if input_smiles == 0: #generate from scratch, default is 0
-                fg_nxt = choose_FuncGroup(s_dict)
-                mol_smiles = fg_nxt[0]
-                mol_mass = int(fg_nxt[1])
-            else: #use the input smiles to start, taken from args entered into moldock.py
-                mol_smiles = input_smiles
-                tempmol = Chem.MolFromSmiles(mol_smiles)
-                mol_mass = tempmol.molwt
-            while mol_mass <= preT_target_mass:
-                fg_nxt = choose_FuncGroup(nt_dict)
-                fg_nxt[0] = sort_RingNum(fg_nxt[0], mol_smiles) # fg_nxt[0] = ... gets around local and global scopes
-                (mol_smiles, mol_mass) = replace_R(mol_smiles, fg_nxt[0], int(fg_nxt[1]), mol_mass, to_cap)
-            to_cap = 1
-            fg_nxt = choose_FuncGroup(t_dict)
-            fg_nxt[0] = sort_RingNum(fg_nxt[0], mol_smiles)
-            (mol_smiles, mol_mass) = replace_R(mol_smiles, fg_nxt[0], int(fg_nxt[1]), mol_mass, to_cap)          
-            #increase the nums
-            targets_gen += 1
-            to_gen +=1
-            #get mol from SMILES
-            mol = Chem.MolFromSmiles(mol_smiles)
-            print("Optimizing Geometry...")
-            AllChem.EmbedMolecule(mol)
-            AllChem.UFFOptimizeMolecule(mol, maxIters=500)
-            mols.append(mol)
-            print("Molecule saved.")
-        sdf_path = os.path.join('data', xp_num, str(xp_num)+'.sdf')
-        if not os.path.exists(os.path.join('data', xp_num)):
-            os.makedirs(os.path.join('data', xp_num))
-        writer = Chem.SDWriter(sdf_path)
-        for m in mols:
-            writer.write(m)
-        writer.flush()
+def molgenerate(xp_num, to_gen, target_mass, input_smiles):
+    avgSGp = getAverages(s_dict)  # gets avg of the masses of each dictionary
+    avgNTGp = getAverages(nt_dict)
+    avgTGp = getAverages(t_dict)
+    app_mass = target_mass - avgSGp - avgTGp  # subs avg mass of s and t groups from target
+    NTGps_to_use = int(app_mass // avgNTGp) # finds out how many nt groups, '//' = rounded down to nearest integer
+    # if this rounds to 0  then no nt groups will be used just s and t groups!
+
+    perm_max = [len(s_dict)] + [len(nt_dict)] * NTGps_to_use + [len(t_dict)] #this is the max num of each group that will be gen'd
+    total_cmpds = 1
+    for i in perm_max:
+        total_cmpds = total_cmpds * i #calculates the total permutations i.e. total cmpds to gen
+    print("This will generate " + str(total_cmpds) + " compounds...")
+    print("Generating combinations...")
+    perm_length = len(perm_max)
+    pos_cntr = 0
+    init_list = [0] * perm_length #make the first item i.e. [0,0,0,0] if using 4 groups
+    perm_array = [init_list] #add it as the first list in the array
+    while pos_cntr < perm_length: #pos_cntr will be the place edit i.e. [x,0,0,0] and length if the length of the array, i.e. 4
+        cnt = 1 #has to be 1 not 0 for < perm_max[x] to work
+        temp_array = perm_array.copy() #copy the array as it stands to a new one for it to be edited before being added back
+        while cnt < perm_max[pos_cntr]: #counter has to be less than the max. available groups (i.e max. permutations)
+            for list in temp_array: #for each list in the array change a value and add it to the permutations array
+                temp_list = list.copy()
+                temp_list[pos_cntr] = cnt
+                perm_array.append(temp_list)
+            cnt += 1
+        pos_cntr += 1
+    print('Done.')
+    #convert the dicts to lists:
+    s_list = createList(s_dict.keys())
+    nt_list = createList(nt_dict.keys())
+    t_list = createList(t_dict.keys())
+    print("Generating compounds. This can take a while...")
+    for perm in perm_array: #for each permutation in the permutations array
+        mol_smiles = s_list[perm[0]] #mol_smiles = the nth (the value of [x,0,0,0] in the array (perm[0]) item in the s_list
+        nt_grp = 1 #set for the first nt_grp
+        while nt_grp <= NTGps_to_use: #if ntgrp to use = 1 then will only pass once, if 0 it won't pass at all
+            fg = nt_list[perm[nt_grp]] #get the correct group from the list
+            fg = sort_RingNum(fg, mol_smiles) #sort the ring numbers
+            mol_smiles = replace_R(mol_smiles, fg) #replace the position of the wildcard with the new group
+            nt_grp += 1 #repeat
+        fg = t_list[perm[nt_grp]] #same as above but the the t group i.e. 1 more than the last nt group
+        fg = sort_RingNum(fg, mol_smiles)
+        mol_smiles = replace_R(mol_smiles, fg)
+        mol = Chem.MolFromSmiles(mol_smiles)
+        finalMol = Chem.AddHs(mol)
+        AllChem.EmbedMolecule(finalMol)
+        AllChem.UFFOptimizeMolecule(finalMol, maxIters=500)
+        sdf_path = open(os.path.join('data', xp_num, str(xp_num) + '.sdf'), 'a') #open in append mode, saves holding 1000s of compounds in memory
+        writeMol(finalMol, sdf_path) #write them to the sdf

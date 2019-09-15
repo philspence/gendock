@@ -76,39 +76,23 @@ def moldocking(xp_num, num_recept, path_to_py_scripts, start_ligand, pythonsh, t
     makedir(vina_ligands_dir)
     vina_files_dir = os.path.join(data_dir, 'vina_files')
     makedir(vina_files_dir)
-    if to_gen > 0: #run generated PDBs
-        molnum = 1
-        pdb_file = os.path.join(data_dir, 'output_mols', "ligand_" + str(molnum) + ".pdb")
-        pdbqt_file = pdb_file.replace("pdb", "pdbqt")
-        pdbqt_file = pdbqt_file.replace("output_mols", "vina_ligands")
-        try:
-            prep_ligand = os.path.join(path_to_py_scripts, 'prepare_ligand4.py')
-            osCommand(str("pythonsh "+prep_ligand+" -l "+str(pdb_file)+" -o "+str(pdbqt_file)))
-            print("Done.")
-        except:
-            print("Failed. Skipping ligand...")
-            molnum += 1
-        dock(pdb_file, pdbqt_file, num_recept, vina_files_dir, molnum, path_to_py_scripts, pythonsh)
-        mol = AllChem.MolFromPDBFile(pdb_file)
-        process(mol, num_recept, molnum, xp_num)
-
-    else: #run SDF file
-        suppl = Chem.SDMolSupplier(os.path.join(data_dir, str(xp_num)+'.sdf'))
-        pdb_file = os.path.join(data_dir, 'ligand.pdb')
-        pdbqt_file = pdb_file.replace("pdb", "pdbqt")
-        molnum = 1
-        for mol in suppl:
-            if molnum >= start_ligand:
-                try:
-                    AllChem.EmbedMolecule(mol)
-                    AllChem.UFFOptimizeMolecule(mol)
-                    AllChem.MolToPDBFile(mol, pdb_file)
-                    dock(pdb_file, pdbqt_file, num_recept, vina_files_dir, molnum, path_to_py_scripts, pythonsh)
-                    os.remove(pdb_file)
-                    os.remove(pdbqt_file)
-                except Exception:
-                    print('Failed to dock ligand '+str(molnum)+'. Skipping ligand...')
-                process(mol, num_recept, molnum, xp_num)
-            else:
-                pass
-            molnum += 1
+    #start docking:
+    suppl = Chem.SDMolSupplier(os.path.join(data_dir, str(xp_num)+'.sdf'))
+    pdb_file = os.path.join(data_dir, 'ligand.pdb')
+    pdbqt_file = pdb_file.replace("pdb", "pdbqt")
+    molnum = 1
+    for mol in suppl:
+        if molnum >= start_ligand:
+            try:
+                AllChem.EmbedMolecule(mol)
+                AllChem.UFFOptimizeMolecule(mol)
+                AllChem.MolToPDBFile(mol, pdb_file)
+                dock(pdb_file, pdbqt_file, num_recept, vina_files_dir, molnum, path_to_py_scripts, pythonsh)
+                os.remove(pdb_file)
+                os.remove(pdbqt_file)
+            except Exception:
+                print('Failed to dock ligand '+str(molnum)+'. Skipping ligand...')
+            process(mol, num_recept, molnum, xp_num)
+        else:
+            pass
+        molnum += 1
