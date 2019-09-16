@@ -33,6 +33,8 @@ def process(mol, r_num, l_num, xp_num):
     temp_array.append(Chem.MolToSmiles(mol))
     if mol.HasProp('NSC'):
         temp_array.append(mol.GetProp('NSC'))
+    elif mol.HasProp('E_NSC'):
+        temp_array.append(mol.GetProp('E_NSC'))
     else:
         temp_array.append('N/A')
     while recept_num <= r_num:
