@@ -1,9 +1,7 @@
 import os
-import numpy as np
 import csv
 from rdkit import Chem
 from rdkit.Chem import AllChem, Descriptors
-from rdkit.Chem.Pharm2D import Gobbi_Pharm2D, Generate
 import subprocess
 
 def osCommand(command):
@@ -22,7 +20,7 @@ def get_energy(file_name):
     lines = file.readlines() 
     file.close() 
     line = lines[1] 
-    result = float(line.split(':')[1].split()[0])  
+    result = float(line.split(':')[1].split()[0])  #splits between : and 0, the binding energy is always between these on line[1]
     return result
 
 def process(mol, r_num, l_num, xp_num):
@@ -70,7 +68,7 @@ def dock(pdb_file, pdbqt_file, num_recept, vina_files_dir, molnum, path_to_py_sc
             pass
         recept_num += 1
 
-def moldocking(xp_num, num_recept, path_to_py_scripts, start_ligand, pythonsh, to_gen):
+def moldocking(xp_num, num_recept, path_to_py_scripts, start_ligand, pythonsh):
     data_dir = os.path.join('data', xp_num)
     vina_ligands_dir = os.path.join(data_dir, 'vina_ligands')
     makedir(vina_ligands_dir)
@@ -91,7 +89,7 @@ def moldocking(xp_num, num_recept, path_to_py_scripts, start_ligand, pythonsh, t
                 os.remove(pdb_file)
                 os.remove(pdbqt_file)
             except Exception:
-                print('Failed to dock ligand '+str(molnum)+'. Skipping ligand...')
+                print('Failed to dock ligand '+str(molnum)+'. Skipping...')
             process(mol, num_recept, molnum, xp_num)
         else:
             pass

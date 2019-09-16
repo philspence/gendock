@@ -1,6 +1,4 @@
-import random
 import os
-import itertools
 from rdkit import Chem
 from rdkit.Chem import AllChem
 
@@ -13,18 +11,14 @@ def findLargestRingNum(s):
             max_num = int(s[x])
     return max_num
 
-def choose_FuncGroup(dict):
-    rand = random.choice(list(dict.items()))
-    return rand #rand[0] = smiles, rand[1] = mass
-
 def sort_RingNum(ng, mol_smiles):
-    maxring_current = int(findLargestRingNum(mol_smiles))#finds largest num in current mol
-    maxring_new = int(findLargestRingNum(ng))#finds largest num in new group, should always be 1
-    if maxring_new >= 1: #basically, if it has a ring then...
-        maxring_nxt = int(maxring_current)+1 #add 1 to current largest num in current mol
-        if maxring_nxt >= 10: #if the new number is greater than 10...
-            maxring_nxt = str("%"+str(maxring_nxt)) #change it from 10 to %10
-        ng = ng.replace(str(maxring_new), str(maxring_nxt))#replace 1 in new group to current largest+1
+    maxring_current = int(findLargestRingNum(mol_smiles)) # finds largest num in current mol
+    maxring_new = int(findLargestRingNum(ng)) # finds largest num in new group, should always be 1
+    if maxring_new >= 1: # basically, if it has a ring then...
+        maxring_nxt = int(maxring_current)+1 # a dd 1 to current largest num in current mol
+        if maxring_nxt >= 10: # if the new number is greater than 10...
+            maxring_nxt = str("%"+str(maxring_nxt)) # change it from 10 to %10
+        ng = ng.replace(str(maxring_new), str(maxring_nxt)) # replace 1 in new group to current largest+1
     return ng
 
 def replace_R(mol, fg):
@@ -33,17 +27,17 @@ def replace_R(mol, fg):
         mol_smiles = fg
         mol_smiles = sort_RingNum(fg, mol)
         mol_smiles = mol_smiles.replace("[*]", "[**]")
-        mol = mol.replace("[**]", mol_smiles) #replace incoming group [*] with [**]
+        mol = mol.replace("[**]", mol_smiles) # replace incoming group [*] with [**]
     if "[***]" in mol:
         mol_smiles = fg
         mol_smiles = sort_RingNum(fg, mol)
         mol_smiles = mol_smiles.replace("[*]", "[***]")
-        mol = mol.replace("[***]", mol_smiles) #replace incoming group [*] with [***]
+        mol = mol.replace("[***]", mol_smiles) # replace incoming group [*] with [***]
     if "[****]" in mol:
         mol_smiles = fg
         mol_smiles = sort_RingNum(fg, mol)
         mol_smiles = mol_smiles.replace("[*]", "[****]")
-        mol = mol.replace("[****]", mol_smiles) #replace incoming group [*] with [****]
+        mol = mol.replace("[****]", mol_smiles) # replace incoming group [*] with [****]
     return mol
 
 def getAverages(dict):
@@ -100,6 +94,7 @@ def molgenerate(xp_num, to_gen, target_mass, input_smiles):
     nt_list = createList(nt_dict.keys())
     t_list = createList(t_dict.keys())
     print("Generating compounds. This can take a while...")
+    #NEED TO ADD ABILITY TO PARSE MORE THAN ONE WILDCARD!
     for perm in perm_array: #for each permutation in the permutations array
         mol_smiles = s_list[perm[0]] #mol_smiles = the nth (the value of [x,0,0,0] in the array (perm[0]) item in the s_list
         nt_grp = 1 #set for the first nt_grp

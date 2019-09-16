@@ -2,7 +2,6 @@ import argparse
 import os
 import sys
 import csv
-import subprocess
 
 from scripts.molgen import *
 from scripts.docking import *
@@ -16,11 +15,6 @@ parser.add_argument('-i', dest='input_smiles', metavar='SMILES String', help='SM
 parser.add_argument('-l', dest='ligand_num', metavar='NUMBER', help='1 (default) will start from the first molecule in the library, enter another ligand number to start from there', type=int, default=int('1'))
 parser.add_argument('--version', action='version', version='moldock_v1.00')
 args = parser.parse_args()
-
-# orig_stdout = sys.stdout
-# log_file = os.path.join('data', args.xp_name, 'log.txt')
-# f = open(log_file, 'w')
-# sys.stdout = f
 
 if args.ligand_num == 1:
     headers = ["Ligand", "Mw", "LogP", "SMILES", "NSC"]
@@ -46,14 +40,12 @@ else:
     print("You're not running a compatible OS")
     exit()
 
-try:
-    if not os.path.isdir(mgltools):
-        print("mgltools cannot be found, fatal error")
-        exit()
-    else:
-        pass
-except:
+#check if mgltools is present
+if not os.path.isdir(mgltools):
+    print("mgltools cannot be found, fatal error. Please make sure you have not renamed it")
     exit()
+else:
+    pass
 
 path_to_py_scripts = os.path.join(mgltools, 'MGLToolsPckgs', 'AutoDockTools', 'Utilities24')
 pythonsh = os.path.join(mgltools, 'bin', 'pythonsh')
@@ -61,7 +53,7 @@ pythonsh = os.path.join(mgltools, 'bin', 'pythonsh')
 if args.gen > 0:
     molgenerate(args.xp_name, args.gen, args.target_mass, args.input_smiles)
 else:
-    print('Finding SDF file instead of generating molecules')
+    print('Using SDF file instead of generating molecules')
 
 #prepare receptors
 print("Preparing receptors...")
@@ -76,13 +68,9 @@ print("Finished preparing receptors.")
     
 #dock and process or skip all together if the user just wants to generate molecules
 if args.num_recept > 0:
-    moldocking(args.xp_name, args.num_recept, path_to_py_scripts, args.ligand_num, pythonsh, args.num_mols)
+    moldocking(args.xp_name, args.num_recept, path_to_py_scripts, args.ligand_num, pythonsh)
 else:
     print("Docking option was to skip...")
     print("Finished.")
-
-# print("Saving log file")
-# sys.stdout = orig_stdout
-# f.close()
 
 

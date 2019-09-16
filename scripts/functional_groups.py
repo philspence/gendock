@@ -1,4 +1,7 @@
-#starting functional groups
+# all groups are listed as :
+# "SMILES": mass,
+
+# starting functional groups
 
 s_dict = {
     "c1([*])c([**])cccc1": 77,
@@ -24,7 +27,7 @@ s_dict = {
     "C1([*])=NC(C([**])=CN2[***])=C2C=C1": 118
 }
 
-#non-terminal groups
+# non-terminal groups
 
 nt_dict = {
     "c1c([*])cccc1": 77,
@@ -49,7 +52,7 @@ nt_dict = {
     "N1CCN([*])CC1": 86
 }
 
-#terminal groups
+# terminal groups
 
 t_dict = {
     "Br": 80,
