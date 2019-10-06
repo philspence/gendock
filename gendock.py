@@ -13,6 +13,7 @@ parser.add_argument('-r', dest='num_recept', metavar='X', help='number of recept
 parser.add_argument('-m', dest='target_mass', metavar='XXX', help='target mass of the generated molecules, default = 400', type=int, default='400')
 parser.add_argument('-i', dest='input_smiles', metavar='SMILES String', help='SMILES string of starting molecule, default is to generate from scratch, see readme for more details', default=int('0'))
 parser.add_argument('-l', dest='ligand_num', metavar='NUMBER', help='1 (default) will start from the first molecule in the library, enter another ligand number to start from there', type=int, default=int('1'))
+parser.add_argument('-n', dest='nligands', metavar='NUMBER', help='Number of molecules to generate, default is to generate all possible molecules from the database', type=int, default=0)
 parser.add_argument('--version', action='version', version='moldock_v1.00')
 args = parser.parse_args()
 
@@ -51,7 +52,7 @@ path_to_py_scripts = os.path.join(mgltools, 'MGLToolsPckgs', 'AutoDockTools', 'U
 pythonsh = os.path.join(mgltools, 'bin', 'pythonsh')
 
 if args.gen > 0:
-    molgenerate(args.xp_name, args.gen, args.target_mass, args.input_smiles)
+    molgenerate(args.xp_name, args.gen, args.target_mass, args.input_smiles, args.nligands)
 else:
     print('Using SDF file instead of generating molecules')
 
