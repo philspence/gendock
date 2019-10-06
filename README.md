@@ -1,21 +1,18 @@
 # GenDock
 
-GenDock is a Python script that can either randomly generate molecules or use a preexisting library of molecules to screen against a macromolecules using AutoDock Vina, to aid in finding new ligands for receptor binding. 
+GenDock is a Python script that can either randomly generate molecules or use a preexisting library of molecules to screen against a macromolecule (or multiple macromolecules) using AutoDock Vina, to aid in finding new ligands for receptor binding. Machine learning alogrithms are also being designed to aid in the identification process.
 
-GenDock is ***not*** designed to give highly detailed computational analysis for the ligand-receptor binding, but ***is*** designed for very high throughput screening, the results of which can then be taken on for further analysis. 
+GenDock is ***not*** designed to give highly detailed computational analysis for the ligand-receptor binding, but ***is*** designed for high throughput screening, the results of which can then be taken on for further analysis. 
 
 ## Setup
 
 GenDock is only supported on macOS and Linux. Windows users can install Ubuntu using WSL and use GenDock from there.
 
-I recommend using [Anaconda](https://www.anaconda.com/download) to setup your python environment. After installing conda, run the install script ***install.py*** to setup GenDock. This script will setup the conda environment, install MGLTools and add the command for pythonsh to either your .bashrc or .bash_profile, depending on your OS. GenDock will not work without these.
-
-Alternatively, you can manage your own python packages, in which case, ensure python version is 3.5.6 and you have the *rdkit* module installed.
-
+I recommend using [Anaconda](https://www.anaconda.com/download) to setup your python environment. GenDock depends upon the installation of *autodock-vina*, *rdkit*, *openbabel*, and  *scikit-learn* - all of which can be handled by Anaconda and should installed to a single environment.
 
 ## Preparing Receptors
 
-Save macromolecules/receptors in the **receptor** directory as **receptorX.pdb** where X is the numerical value, receptor1.pdb or receptor2.pdb, for example. The Autodock Vina configuration files are then named **rX-vina-config.txt**. These should be edited with your vina properties, grid size and location etc. I recommend using AutoDock Tools to find out the suitable grid size and location for your receptor. There is already a default config file named **r1-vina-config.txt** and the parameters are set as:
+Save your macromolecules/receptors in the *receptor* directory as **receptorX.pdbqt** where X is the numerical value, e.g. **receptor1.pdbqt**. The Autodock Vina configuration files are then named **rX-vina-config.txt**. These should be edited with your vina properties, grid size and location etc. I recommend using AutoDock Tools to find out the suitable grid size and location for your receptor, as well as saving to a *.pdbqt* file format. There is already a default config file named **r1-vina-config.txt** and the parameters are set as:
 ```
 receptor = receptor/receptor.pdbqt
 
@@ -31,55 +28,31 @@ num_modes = 10
 ```
 ## Running GenDock
 
-GenDock is designed to be very user configurable and runs in 4 stages:
-1. Randomly generate molecules (either from nothing or based on a user-inputted molecule)
-1. Optimise the geometry of the generated molecules
-1. Prepare the molecules for docking as ligands in AutoDock Vina
-1. Dock ligands using Autodock Vina
-
-The following commands should be followed to run GenDock
+The following commands should be followed to run GenDock:
 
 ```
-source activate gendock
-python gendock.py
+import gendock as gd
+gd.generate(name, target_mass, nligands=X)
+gd.dock(name, num_recept, ligand_num=Y)
 ```
-Using the -h command will bring up the list of required arguments.
+where:
+ 
+**name** is the name of the experiment, all files will be saved the **data** directory. GenDock will create a directory with the name of the experiment that is given by this argument (if one does not already exist).
 
-#### Experiment name (-x) *required*
-This is the name of the experiment, all files will be saved the **data** directory. GenDock will create a directory with the name of the experiment that is given by this argument, e.g. **data/experiment1** if the argument **-x experiment1** is given.
+**target_mass** is the appproximate mass of the molecules that you want to generate.
 
-#### Number of molecules to generate or dock (-n) *required*
-This is the number of molecules to generate or dock. You can skip generating molecules if necessary (for example in the case where you already have a library of molecules) by running with value ```0```. These molecules will be stored in an SDF file located in the data directory for that experiment. When skipping generaation of molecules, ensure that there is an SDF file from the library you want to screen (e.g. the NCI library) inside the data directory of the experiment and it is named *"experiment_name".sdf*.
+**nligands** is the number of molecules you want to generate, if an argument is given, all possible molecules will be generated (this can range into the tens of millions of molecules). If a number is given, then that amount of molecules will be randomly chosen from the possible molecules that could be generated.
 
-#### Number of receptors (-r) *required*
-GenDock will use as many receptors as you define, comparison of binding is easy using the CSV file generated. Make sure each receptor has its own vina configuration file. GenDock will then prepare the receptors for AutoDock Vina automatically before docking ligands. To skip docking use the value ```0```.
+**num_recept** is the number of receptors you want to dock against.
 
-#### Mass of molecules to generate (-m) *default = 400*
-Use this argument to define the size of molecules that you wish to generate. The default is 400, this value is always an estimate, the mass will have a range of about 100, so for 400 you will most likely get a range of 350-450.
-
-#### SMILES string of input molecule (-i)
-GenDock can generate molecules from scratch or it can use an input molecule in the form of a SMILES string. An example is ``` Nc1nc(c2ccc(NC([*])=O)cn2)cs1 ``` where ``` [*] ``` denotes the position of functionalisation. ChemDraw (and other programs) have the ability to copy structures as SMILES strings (Ctr + Alt + C), set the functionalisation site to be labelled as **A** instead of **R** to have ```[*]``` in the SMILES string. Find an example molecule in the **input_mol** directory.
-
-#### Tell GenDock which ligand to start at (-l) *default = 1*
-If you are running large libraries, it can be useful to use this option if you are cut off for some reason halfway through a screen. Simply use this to tell GenDock which ligand was the last one to be screened and it will continue from there instead of starting again from ligand 1.
+**ligand_num** is the ligand that you want to start with. This is useful if you have generated 1000 ligands and then got cut off after docking 500 of them. Set this to 501 and it will carry on from where it left off.
 
 ## Results
 
 GenDock will save a CSV file in the **data/exp_name/** directory that will contain the SMILES string of the ligand as well as other chemical properies, and the best binding energy for each receptor. GenDock stores the results of the AutoDock Vina screening in the **vina_files** directory. Inside each directory is both the PDBQT files and the LOG file. These are named as **ligand_X-r_Y.pdbqt or .txt** where X is the ligand number and Y is the receptor number.
 
-## Editing
-If you make any significant edits or add new functional groups, please contact me so I can try to incorporate these into the next version of GenDock.
-
-## Extra Tools
-GenDock includes some extra tools such as the **smiles-to-pdb.py** sctript that will convert the SMILES strings saved on each line of the **smiles-strings.txt** file to PDBs and store them for use in the **tools/PDBmols** directory. This is launched the same way as GenDock (within the Conda environment):
-```
-python3.5 smiles-to-pdb.py
-```
-GenDock can also convert SDF files containing multiple molecules to individual PDBs for screening (useful for something like the NCI library). To tell the script which SDF file to use, use the argument -f to define the filename:
-```
-python3.5 sdf-to-pdb.py -f filename.sdf
-```
-These PDBs will be saved in the **tools/PDBmols** directory.
+## Functional Groups
+Functional groups can be found in **scripts/functional_groups.py** as a list of SMILES strings. This file can be edited to add new functional groups.
 
 ## References
 

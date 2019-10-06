@@ -32,7 +32,7 @@ def writeMol(mol, sdf_path):
     writer.write(mol)
 
 #MOLECULE GENERATION
-def molgenerate(xp_num, to_gen, target_mass, input_smiles, nligands):
+def molgenerate(name, target_mass, nligands):
     avgSGp = getAverages(s_list)  # gets avg of the masses of each dictionary
     avgNTGp = getAverages(nt_list)
     avgTGp = getAverages(t_list)
@@ -77,9 +77,12 @@ def molgenerate(xp_num, to_gen, target_mass, input_smiles, nligands):
         fg = Chem.MolFromSmiles(t_list[perm[nt_grp]]) #same as above but the the t group i.e. 1 more than the last nt group
         mol = replace_R(mol, fg)
         # mol.SetProp("Ligand_Number", ligand_num)
-        # ligand_num += 1
         Chem.AddHs(mol)
         AllChem.EmbedMolecule(mol)
         AllChem.UFFOptimizeMolecule(mol, maxIters=500)
-        sdf_path = open(os.path.join('data', xp_num, str(xp_num) + '.sdf'), 'a') #open in append mode, saves holding 1000s of compounds in memory
-        writeMol(mol, sdf_path) #write them to the sdf
+        sdf_file = os.path.join('data', name, str(name) + '.sdf')
+        sdf_open = open(sdf_file, 'a') #open in append mode, saves holding 1000s of compounds in memory
+        writeMol(mol, sdf_open) #write them to the sdf
+        print('Generated ligand ' + str(ligand_num) + '.')
+        ligand_num += 1
+    print("Generation complete. Molecules saved in " + sdf_file)
