@@ -25,7 +25,7 @@ def get_energy(file_name):
     result = float(line.split(':')[1].split()[0])  #splits between : and 0, the binding energy is always between these on line[1]
     return result
 
-def process(mol, r_num, l_num, name):
+def process(mol, receptors, l_num, name):
     print("Trying to acquire ligand attributes and binding energy...")
     temp_array = []
     recept_num = 1
@@ -39,10 +39,9 @@ def process(mol, r_num, l_num, name):
         temp_array.append(mol.GetProp('E_NSC'))
     else:
         temp_array.append('N/A')
-    while recept_num <= r_num:
-        ligand_file = os.path.join('data', str(name), 'vina_files', 'ligand_'+str(l_num)+'-r_'+str(recept_num)+'.pdbqt')
+    for receptor in receptors:
+        ligand_file = os.path.join('data', str(name), 'vina_files', 'ligand_'+str(l_num)+'-'+receptor+'.pdbqt')
         temp_array.append(str(get_energy(ligand_file)))
-        recept_num += 1
     csv_fname = str(name)+"_results.csv"
     csv_file = os.path.join('data', name, csv_fname)
     with open(csv_file, "a") as f:
@@ -62,25 +61,25 @@ def convertMol(pdb, pdbqt):
     obCon.WriteFile(mol, pdbqt)
     os.remove(pdb)
 
-def dock(pdb_file, pdbqt_file, num_recept, vina_files_dir, molnum):
+def docking(pdb_file, pdbqt_file, receptors, vina_files_dir, molnum):
     convertMol(pdb_file, pdbqt_file)
-    recept_num = 1
-    while recept_num <= num_recept:
+    recept_num = 0
+    for receptor in receptors:
         # run vina
-        print("Docking ligand " + str(molnum) + " with receptor " + str(recept_num) + "...")
-        f_out_pdbqt = os.path.join(vina_files_dir, 'ligand_' + str(molnum) + '-r_' + str(recept_num) + '.pdbqt')
-        f_out_log = os.path.join(vina_files_dir, 'ligand_' + str(molnum) + '-r_' + str(recept_num) + '.txt')
+        print("Docking ligand " + str(molnum) + " with " + receptor)
+        f_out_pdbqt = os.path.join(vina_files_dir, 'ligand_' + str(molnum) + '-' + str(receptor) + '.pdbqt')
+        f_out_log = os.path.join(vina_files_dir, 'ligand_' + str(molnum) + '-' + str(receptor) + '.txt')
         try:
             # python = sys.executable.split(os.sep)
             # vina = os.path.join(os.sep, *python[:-1], 'vina')
-            vina_command = "vina --config receptor/r" + str(
-                recept_num) + "-vina-config.txt --ligand " + pdbqt_file + " --out " + f_out_pdbqt + " --log " + f_out_log
+            rpath = os.path.join('receptor', receptor)
+            vina_command = 'vina --config ' + rpath + '-config.txt --ligand ' + pdbqt_file + ' --out ' + f_out_pdbqt + ' --log ' + f_out_log
             osCommand(vina_command)
         except Exception:
             pass
         recept_num += 1
 
-def moldocking(name, num_recept, start_ligand):
+def moldocking(name, start_ligand, receptors):
     data_dir = os.path.join('data', name)
     vina_ligands_dir = os.path.join(data_dir, 'vina_ligands')
     makedir(vina_ligands_dir)
@@ -97,11 +96,11 @@ def moldocking(name, num_recept, start_ligand):
                 AllChem.EmbedMolecule(mol)
                 AllChem.UFFOptimizeMolecule(mol)
                 AllChem.MolToPDBFile(mol, pdb_file)
-                dock(pdb_file, pdbqt_file, num_recept, vina_files_dir, molnum)
+                docking(pdb_file, pdbqt_file, receptors, vina_files_dir, molnum)
                 os.remove(pdbqt_file)
             except Exception:
                 print('Failed to dock ligand '+str(molnum)+'. Skipping...')
-            process(mol, num_recept, molnum, name)
+            process(mol, receptors, molnum, name)
         else:
             pass
         molnum += 1

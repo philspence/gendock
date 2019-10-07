@@ -12,7 +12,7 @@ I recommend using [Anaconda](https://www.anaconda.com/download) to setup your py
 
 ## Preparing Receptors
 
-Save your macromolecules/receptors in the *receptor* directory as **receptorX.pdbqt** where X is the numerical value, e.g. **receptor1.pdbqt**. The Autodock Vina configuration files are then named **rX-vina-config.txt**. These should be edited with your vina properties, grid size and location etc. I recommend using AutoDock Tools to find out the suitable grid size and location for your receptor, as well as saving to a *.pdbqt* file format. There is already a default config file named **r1-vina-config.txt** and the parameters are set as:
+Save your macromolecules/receptors in the *receptor* directory as **[name].pdbqt** and the Autodock Vina configuration files must then be named **[name]-config.txt**. These should be edited with your vina properties, grid size and location etc. I recommend using AutoDock Tools to find out the suitable grid size and location for your receptor, as well as saving to a *.pdbqt* file format. There is already a default config file named **receptor1-config.txt** and the parameters are set as:
 ```
 receptor = receptor/receptor.pdbqt
 
@@ -32,8 +32,8 @@ The following commands should be followed to run GenDock:
 
 ```
 import gendock as gd
-gd.generate(name, target_mass, nligands=X)
-gd.dock(name, num_recept, ligand_num=Y)
+gd.generate(name, target_mass, nligands=X, mol=rdkit.mol)
+gd.dock(name, ligand_num=Y, r1='XXX', r2='YYY', r3='ZZZ')
 ```
 where:
  
@@ -41,15 +41,23 @@ where:
 
 **target_mass** is the appproximate mass of the molecules that you want to generate.
 
-**nligands** is the number of molecules you want to generate, if an argument is given, all possible molecules will be generated (this can range into the tens of millions of molecules). If a number is given, then that amount of molecules will be randomly chosen from the possible molecules that could be generated.
+***optional***, **nligands** is the number of molecules you want to generate, if an argument is given, all possible molecules will be generated (this can range into the tens of millions of molecules). If a number is given, then that amount of molecules will be randomly chosen from the possible molecules that could be generated.
 
-**num_recept** is the number of receptors you want to dock against.
+***optional***, **mol** is an RDKit mol object that contains wildcard atoms i.e '`[*]`' atoms. For example one could generate an RDKit mol by the following:
+```
+from rdkit import Chem
+import gendock as gd
+m = Chem.MolFromSmiles('[*]c1cccc[*]c1')
+gd.generate('test', 150, mol=m)
+```
 
-**ligand_num** is the ligand that you want to start with. This is useful if you have generated 1000 ligands and then got cut off after docking 500 of them. Set this to 501 and it will carry on from where it left off.
+***optional***, **r1, r2, r3** are the names of the receptor files, i.e. 1ELN (do not include the '.pdbqt' in this). You must give the name of at least one receptor and can define up to three.
+
+***optional***, **ligand_num** is the ligand that you want to start with. This is useful if you have generated 1000 ligands and then got cut off after docking 500 of them. Set this to 501 and it will carry on from where it left off.
 
 ## Results
 
-GenDock will save a CSV file in the **data/exp_name/** directory that will contain the SMILES string of the ligand as well as other chemical properies, and the best binding energy for each receptor. GenDock stores the results of the AutoDock Vina screening in the **vina_files** directory. Inside each directory is both the PDBQT files and the LOG file. These are named as **ligand_X-r_Y.pdbqt or .txt** where X is the ligand number and Y is the receptor number.
+GenDock will save a CSV file in the **data/exp_name/** directory that will contain the SMILES string of the ligand as well as other chemical properies, and the best binding energy for each receptor. GenDock stores the results of the AutoDock Vina screening in the **vina_files** directory. Inside each directory is both the PDBQT files and the LOG file. These are named as **ligand_X-r.pdbqt or .txt** where X is the ligand number and r is the receptor name.
 
 ## Functional Groups
 Functional groups can be found in **scripts/functional_groups.py** as a list of SMILES strings. This file can be edited to add new functional groups.

@@ -66,7 +66,7 @@ t_list = [
     "c1ccccn1",
     "C1CCCCC1",
     "C(N=[N+]=[N-])",
-    "[N]",
+    "N",
     "C(Cl)(=O)",
     "C(=O)C",
     "S",
