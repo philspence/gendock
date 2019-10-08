@@ -32,7 +32,7 @@ The following commands should be followed to run GenDock:
 
 ```
 import gendock as gd
-gd.generate(name, target_mass, nligands=X, mol=rdkit.mol)
+gd.generate(name, target_mass, nligands=X, mol=rdkit.Chem.rdchem.Mol)
 gd.dock(name, ligand_num=Y, r1='XXX', r2='YYY', r3='ZZZ')
 ```
 where:
@@ -41,7 +41,7 @@ where:
 
 **target_mass** is the appproximate mass of the molecules that you want to generate.
 
-***optional***, **nligands** is the number of molecules you want to generate, if an argument is given, all possible molecules will be generated (this can range into the tens of millions of molecules). If a number is given, then that amount of molecules will be randomly chosen from the possible molecules that could be generated.
+***optional***, **nligands** is the number of molecules you want to generate, if an argument is given, all possible molecules will be generated (this can range into the tens of millions of molecules - *be warned*). If a number is given, then that amount of molecules will be randomly chosen from the possible molecules that could be generated.
 
 ***optional***, **mol** is an RDKit mol object that contains wildcard atoms i.e '`[*]`' atoms. For example one could generate an RDKit mol by the following:
 ```

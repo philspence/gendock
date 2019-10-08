@@ -12,11 +12,14 @@ def findLargestRingNum(s):
     return max_num
 
 def replace_R(mol, fg):
-    wc = Chem.MolFromSmiles("[*]")
-    newmol = Chem.ReplaceSubstructs(mol, wc, fg, replaceAll=True)
-    print(Chem.MolToSmiles(mol))
-    Chem.SanitizeMol(newmol[0])
-    return newmol[0]
+    try:
+        wc = Chem.MolFromSmiles("[*]")
+        newmol = Chem.ReplaceSubstructs(mol, wc, fg)
+        Chem.SanitizeMol(newmol[0])
+        return newmol[0]
+    except:
+        print('Functional group not possible, molecule will contain wildcard.')
+        return mol
 
 def getAverages(list):
     tot = 0
@@ -35,53 +38,78 @@ def writeMol(mol, sdf_path):
 #MOLECULE GENERATION
 def molgenerate(name, target_mass, nligands, mol):
     if mol is not None:
-        avgSGp = Descriptors.MolWt(mol)
         smi = Chem.MolToSmiles(mol)
+        wc = Chem.MolFromSmiles('[*]')
+        wcFactor = len(mol.GetSubstructMatches(wc))
         fgs.s_list = [smi]
     else:
-        avgSGp = getAverages(fgs.s_list)  # gets avg of the masses of each dictionary
+        wcFactor = 1
+    avgSGp = getAverages(fgs.s_list)  # gets avg of the masses of each dictionary
     avgNTGp = getAverages(fgs.nt_list)
     avgTGp = getAverages(fgs.t_list)
-    app_mass = target_mass - avgSGp - avgTGp  # subs avg mass of s and t groups from target
-    NTGps_to_use = int(app_mass // avgNTGp)  # finds out how many nt groups, '//' = rounded down to nearest integer
+    app_mass = target_mass - avgSGp - (avgTGp * wcFactor)  # subs avg mass of s and t groups from target
+    NTGps_to_use = int((app_mass // (avgNTGp * wcFactor)) * wcFactor) # finds out how many nt groups, '//' = rounded down to nearest integer
     # if this rounds to 0  then no nt groups will be used just s and t groups!
-    perm_max = [len(fgs.s_list)] + [len(fgs.nt_list)] * NTGps_to_use + [len(fgs.t_list)] #this is the max num of each group that will be gen'd
-    total_cmpds = 1
-    for i in perm_max:
-        total_cmpds = total_cmpds * i #calculates the total permutations i.e. total cmpds to gen
-    print("This will generate " + str(total_cmpds) + " compounds...")
+    perm_max = [len(fgs.s_list)] + ([len(fgs.nt_list)] * NTGps_to_use) + ([len(fgs.t_list)] * wcFactor) #this is the max num of each group that will be gen'd
     perm_length = len(perm_max)
-    pos_cntr = 0
-    init_list = [0] * perm_length #make the first item i.e. [0,0,0,0] if using 4 groups
-    perm_array = [init_list] #add it as the first list in the array
-    while pos_cntr < perm_length: #pos_cntr will be the place edit i.e. [x,0,0,0] and length if the length of the array, i.e. 4
-        cnt = 1 #has to be 1 not 0 for < perm_max[x] to work
-        temp_array = perm_array.copy() #copy the array as it stands to a new one for it to be edited before being added back
-        while cnt < perm_max[pos_cntr]: #counter has to be less than the max. available groups (i.e max. permutations)
-            for list in temp_array: #for each list in the array change a value and add it to the permutations array
-                temp_list = list.copy()
-                temp_list[pos_cntr] = cnt
-                perm_array.append(temp_list)
-            cnt += 1
-        pos_cntr += 1
     if nligands > 0:
         print('Generating ' + str(nligands) + ' compounds. This can take a while...')
     else:
         print("Generating all compounds. This can take a while...")
-    if nligands > 0:
-        temp_array = random.sample(perm_array, nligands)
-        perm_array = temp_array
+    perms = []
+    if nligands > 0: #if the user only wants a select number of molecules then...
+        while len(perms) < nligands:
+            #check the length of the permutations vs number of ligands wanted
+            perm = []
+            pos = 0
+            while pos < perm_length:
+                #for each position in a permutation, generate a random number
+                perm.append(random.choice(range(perm_max[pos])))
+                pos += 1
+            found = perm in perms
+            #check if this permutation exists, if it does, try again
+            if found is True:
+                pass
+            else:
+                perms.append(perm)
+    else:
+        total_cmpds = 1
+        for i in perm_max:
+            total_cmpds = total_cmpds * i  # calculates the total permutations i.e. total cmpds to gen
+        cont = input("This will generate " + str(total_cmpds) + " compounds...\nDo you wish to continue? (y/n) ")
+        if cont == 'y' or cont == 'yes':
+            pass
+        else:
+            return()
+        pos_cntr = 0
+        init_list = [0] * perm_length #make the first item i.e. [0,0,0,0] if using 4 groups
+        perms = [init_list] #add it as the first list in the array
+        while pos_cntr < perm_length: #pos_cntr will be the place edit i.e. [x,0,0,0] and length if the length of the array, i.e. 4
+            cnt = 1 #has to be 1 not 0 for < perm_max[x] to work
+            temp_array = perms.copy() #copy the array as it stands to a new one for it to be edited before being added back
+            while cnt < perm_max[pos_cntr]: #counter has to be less than the max. available groups (i.e max. permutations)
+                for list in temp_array: #for each list in the array change a value and add it to the permutations array
+                    temp_list = list.copy()
+                    temp_list[pos_cntr] = cnt
+                    perms.append(temp_list)
+                cnt += 1
+            pos_cntr += 1
     #NEED TO ADD ABILITY TO PARSE MORE THAN ONE WILDCARD!
     ligand_num = 1
-    for perm in perm_array: #for each permutation in the permutations array
+    for perm in perms: #for each permutation in the permutations array
+        print(perm)
         mol = Chem.MolFromSmiles(fgs.s_list[perm[0]]) #mol = the nth (the value of [x,0,0,0] in the array (perm[0]) item in the s_list
-        nt_grp = 1 #set for the first nt_grp
-        while nt_grp <= NTGps_to_use: #if ntgrp to use = 1 then will only pass once, if 0 it won't pass at all
-            fg = Chem.MolFromSmiles(fgs.nt_list[perm[nt_grp]]) #get the correct group from the list
+        pos = 1 #set for the first nt_grp
+        while pos <= NTGps_to_use: #if ntgrp to use = 1 then will only pass once, if 0 it won't pass at all
+            fg = Chem.MolFromSmiles(fgs.nt_list[perm[pos]]) #get the correct group from the list
             mol = replace_R(mol, fg) #replace the position of the wildcard with the new group
-            nt_grp += 1 #repeat
-        fg = Chem.MolFromSmiles(fgs.t_list[perm[nt_grp]]) #same as above but the the t group i.e. 1 more than the last nt group
-        mol = replace_R(mol, fg)
+            print(Chem.MolToSmiles(mol))
+            pos += 1 #repeat
+        while pos < perm_length:
+            fg = Chem.MolFromSmiles(fgs.t_list[perm[pos]]) #same as above but with the t groups
+            mol = replace_R(mol, fg)
+            print(Chem.MolToSmiles(mol))
+            pos += 1
         # mol.SetProp("Ligand_Number", ligand_num)
         Chem.AddHs(mol)
         AllChem.EmbedMolecule(mol)
