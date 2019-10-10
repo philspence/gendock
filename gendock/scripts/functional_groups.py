@@ -14,7 +14,7 @@ s_list = [
     "c1([*])ccc2c(c1)cccc2",
     "c1ccc2c(c1)cc([*])cc2",
     "c1([*])cc2c(cccc2)cc1",
-    "[*]NC1=C(C2=C(C=C1)N[*])C(C3=C(O)C=CC(O)=C3C2=O)=O",
+    "NC1=C(C2=C(C=C1)N[*])C(C3=C(O)C=CC(O)=C3C2=O)=O",
     "NC1=C(C(C2=C(C=C3)O)=O)C(C(C2=C3O)=O)=C(N[*])C=C1",
     "O=C1C2=C(C=NN2)N=C([*])N1",
     "O=C1C2=C(C=NN2[*])N=CN1",

@@ -2,8 +2,17 @@ import os
 import csv
 import rdkit
 from rdkit import Chem
-import scripts.molgen as gen
-import scripts.docking as dk
+import gendock.scripts.molgen as mg
+import gendock.scripts.docking as dk
+import gendock as gd
+
+def chkDirectory():
+    homeDir = os.getcwd()
+    if not os.path.exists('receptors'):
+        print("No receptors directory found in the current working directory, quitting GenDock.")
+        exit()
+    else:
+        return
 
 def generate(name, target_mass, *args, **kwargs):
     data_path = os.path.join('data', name)
@@ -15,24 +24,22 @@ def generate(name, target_mass, *args, **kwargs):
         if not type(mol) == rdkit.Chem.rdchem.Mol:
             print("mol is not an RDKit mol type.")
             return
-    gen.molgenerate(name, target_mass, nligands, mol)
+    mg.molgenerate(name, target_mass, nligands, mol, gd.s_list, gd.nt_list, gd.t_list)
 
 def dock(name, *args, **kwargs):
     ligand_num = kwargs.get('ligand_num', 1)
-    receptor1 = kwargs.get('r1', None)
-    receptor2 = kwargs.get('r2', None)
-    receptor3 = kwargs.get('r3', None)
-    receptors = [receptor1, receptor2, receptor3]
-    print(receptors)
-    rnum = 0
-    for r in receptors:
-        if r is not None:
-            rnum += 1
+    receptors = [kwargs.get('receptors', None)]
+    rnum = len(receptors)
     if rnum == 0:
         print('No receptor names given, quitting.')
         return
-    receptors = receptors[:rnum]
-    #prepare csv for results
+    # check if receptors exist
+    for r in receptors:
+        rpath = os.path.join('receptors', r + ".pdbqt")
+        if not os.path.exists(rpath):
+            print(rpath + " not found.")
+            return
+    # prepare csv for results
     if ligand_num == 1:
         headers = ["Ligand", "Mw", "LogP", "SMILES", "NSC"]
         csv_fname = str(name) + "_results.csv"
@@ -45,16 +52,6 @@ def dock(name, *args, **kwargs):
         with open(csv_file, "a") as f:
             writer = csv.writer(f, delimiter=",")
             writer.writerow(headers)
-
-    #prepare receptors
-    rpaths = []
-    for r in receptors:
-        rpath = os.path.join('receptor', r + ".pdbqt")
-        if not os.path.exists(rpath):
-            print(rpath + " not found.")
-            return
-        else:
-            rpaths.append(rpath)
     # if not os.path.exists(receptor_pdbqt):
     #     print("Preparing receptors...")
     #     convertMol(receptor_pdb, receptor_pdbqt)

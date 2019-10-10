@@ -72,7 +72,7 @@ def docking(pdb_file, pdbqt_file, receptors, vina_files_dir, molnum):
         try:
             # python = sys.executable.split(os.sep)
             # vina = os.path.join(os.sep, *python[:-1], 'vina')
-            rpath = os.path.join('receptor', receptor)
+            rpath = os.path.join('receptors', receptor)
             vina_command = 'vina --config ' + rpath + '-config.txt --ligand ' + pdbqt_file + ' --out ' + f_out_pdbqt + ' --log ' + f_out_log
             osCommand(vina_command)
         except Exception:

@@ -1,3 +1,0 @@
-1 = 1ELN (iM)
-2 = (G4)
-3 = DS (same sequence as used experimentally)

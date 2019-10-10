@@ -2,7 +2,7 @@ import os
 from rdkit import Chem
 from rdkit.Chem import AllChem, Descriptors
 import random
-import scripts.functional_groups as fgs
+import gendock.scripts.functional_groups as fgs
 
 def findLargestRingNum(s):
     max_num = 0
@@ -36,21 +36,21 @@ def writeMol(mol, sdf_path):
     writer.write(mol)
 
 #MOLECULE GENERATION
-def molgenerate(name, target_mass, nligands, mol):
+def molgenerate(name, target_mass, nligands, mol, s_list, nt_list, t_list):
     if mol is not None:
         smi = Chem.MolToSmiles(mol)
         wc = Chem.MolFromSmiles('[*]')
         wcFactor = len(mol.GetSubstructMatches(wc))
-        fgs.s_list = [smi]
+        s_list = [smi]
     else:
         wcFactor = 1
-    avgSGp = getAverages(fgs.s_list)  # gets avg of the masses of each dictionary
-    avgNTGp = getAverages(fgs.nt_list)
-    avgTGp = getAverages(fgs.t_list)
+    avgSGp = getAverages(s_list)  # gets avg of the masses of each dictionary
+    avgNTGp = getAverages(nt_list)
+    avgTGp = getAverages(t_list)
     app_mass = target_mass - avgSGp - (avgTGp * wcFactor)  # subs avg mass of s and t groups from target
     NTGps_to_use = int((app_mass // (avgNTGp * wcFactor)) * wcFactor) # finds out how many nt groups, '//' = rounded down to nearest integer
     # if this rounds to 0  then no nt groups will be used just s and t groups!
-    perm_max = [len(fgs.s_list)] + ([len(fgs.nt_list)] * NTGps_to_use) + ([len(fgs.t_list)] * wcFactor) #this is the max num of each group that will be gen'd
+    perm_max = [len(s_list)] + ([len(nt_list)] * NTGps_to_use) + ([len(t_list)] * wcFactor) #this is the max num of each group that will be gen'd
     perm_length = len(perm_max)
     if nligands > 0:
         print('Generating ' + str(nligands) + ' compounds. This can take a while...')
@@ -98,15 +98,15 @@ def molgenerate(name, target_mass, nligands, mol):
     ligand_num = 1
     for perm in perms: #for each permutation in the permutations array
         print(perm)
-        mol = Chem.MolFromSmiles(fgs.s_list[perm[0]]) #mol = the nth (the value of [x,0,0,0] in the array (perm[0]) item in the s_list
+        mol = Chem.MolFromSmiles(s_list[perm[0]]) #mol = the nth (the value of [x,0,0,0] in the array (perm[0]) item in the s_list
         pos = 1 #set for the first nt_grp
         while pos <= NTGps_to_use: #if ntgrp to use = 1 then will only pass once, if 0 it won't pass at all
-            fg = Chem.MolFromSmiles(fgs.nt_list[perm[pos]]) #get the correct group from the list
+            fg = Chem.MolFromSmiles(nt_list[perm[pos]]) #get the correct group from the list
             mol = replace_R(mol, fg) #replace the position of the wildcard with the new group
             print(Chem.MolToSmiles(mol))
             pos += 1 #repeat
         while pos < perm_length:
-            fg = Chem.MolFromSmiles(fgs.t_list[perm[pos]]) #same as above but with the t groups
+            fg = Chem.MolFromSmiles(t_list[perm[pos]]) #same as above but with the t groups
             mol = replace_R(mol, fg)
             print(Chem.MolToSmiles(mol))
             pos += 1
