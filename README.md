@@ -8,7 +8,10 @@ GenDock is ***not*** designed to give highly detailed computational analysis for
 
 GenDock is only supported on macOS and Linux. Windows users can install Ubuntu using WSL and use GenDock from there.
 
-I recommend using [Anaconda](https://www.anaconda.com/download) to setup your python environment. GenDock depends upon the installation of *autodock-vina*, *rdkit*, *openbabel*, and  *scikit-learn* - all of which can be handled by Anaconda and should installed to a single environment.
+I recommend using [Anaconda](https://www.anaconda.com/download) to setup your python environment. GenDock depends upon the installation of *autodock-vina*, *rdkit*, *openbabel*, and  *scikit-learn* - all of which can be handled by Anaconda and should installed to a single environment. You can then install gendock into this environment with:
+```
+pip install gendock
+```
 
 ## Preparing Receptors
 

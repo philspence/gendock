@@ -14,11 +14,10 @@ setup(
     packages=find_packages(),
     long_description=long_description,
     long_description_content_type='text/markdown',
-    python_requires='>=3.6',
+    python_requires='>=3.7',
     classifiers=[
         'Programming Language :: Python :: 3',
         'Operating System :: MacOS',
-        'Operating System :: POSIX :: Linux',
-        'Development Status :: 3 - Alpha',
+        'Operating System :: POSIX :: Linux'
     ]
 )
