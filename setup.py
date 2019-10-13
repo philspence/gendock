@@ -6,7 +6,7 @@ with open('README.md', 'r') as fh:
 
 setup(
     name='gendock',
-    version='',
+    version='1.0',
     description='Python package for generating and docking molecules against macromolecules',
     url='https://github.com/philspence/gendock',
     author='Phil Spence',

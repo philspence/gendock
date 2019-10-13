@@ -2,7 +2,6 @@ import os
 from rdkit import Chem
 from rdkit.Chem import AllChem, Descriptors
 import random
-import gendock.scripts.functional_groups as fgs
 
 def findLargestRingNum(s):
     max_num = 0
@@ -12,14 +11,10 @@ def findLargestRingNum(s):
     return max_num
 
 def replace_R(mol, fg):
-    try:
-        wc = Chem.MolFromSmiles("[*]")
-        newmol = Chem.ReplaceSubstructs(mol, wc, fg)
-        Chem.SanitizeMol(newmol[0])
-        return newmol[0]
-    except:
-        print('Functional group not possible, molecule will contain wildcard.')
-        return mol
+    wc = Chem.MolFromSmiles("[*]")
+    newmol = Chem.ReplaceSubstructs(mol, wc, fg)
+    Chem.SanitizeMol(newmol[0])
+    return newmol[0]
 
 def getAverages(list):
     tot = 0
@@ -97,18 +92,15 @@ def molgenerate(name, target_mass, nligands, mol, s_list, nt_list, t_list):
     #NEED TO ADD ABILITY TO PARSE MORE THAN ONE WILDCARD!
     ligand_num = 1
     for perm in perms: #for each permutation in the permutations array
-        print(perm)
         mol = Chem.MolFromSmiles(s_list[perm[0]]) #mol = the nth (the value of [x,0,0,0] in the array (perm[0]) item in the s_list
         pos = 1 #set for the first nt_grp
         while pos <= NTGps_to_use: #if ntgrp to use = 1 then will only pass once, if 0 it won't pass at all
             fg = Chem.MolFromSmiles(nt_list[perm[pos]]) #get the correct group from the list
             mol = replace_R(mol, fg) #replace the position of the wildcard with the new group
-            print(Chem.MolToSmiles(mol))
             pos += 1 #repeat
         while pos < perm_length:
             fg = Chem.MolFromSmiles(t_list[perm[pos]]) #same as above but with the t groups
             mol = replace_R(mol, fg)
-            print(Chem.MolToSmiles(mol))
             pos += 1
         # mol.SetProp("Ligand_Number", ligand_num)
         Chem.AddHs(mol)

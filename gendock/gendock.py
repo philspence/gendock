@@ -28,7 +28,7 @@ def generate(name, target_mass, *args, **kwargs):
 
 def dock(name, *args, **kwargs):
     ligand_num = kwargs.get('ligand_num', 1)
-    receptors = [kwargs.get('receptors', None)]
+    receptors = kwargs.get('receptors', None)
     rnum = len(receptors)
     if rnum == 0:
         print('No receptor names given, quitting.')
@@ -36,8 +36,8 @@ def dock(name, *args, **kwargs):
     # check if receptors exist
     for r in receptors:
         rpath = os.path.join('receptors', r + ".pdbqt")
+        print(rpath)
         if not os.path.exists(rpath):
-            print(rpath + " not found.")
             return
     # prepare csv for results
     if ligand_num == 1:

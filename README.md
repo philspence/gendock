@@ -28,12 +28,12 @@ num_modes = 10
 ```
 ## Running GenDock
 
-The following commands should be followed to run GenDock:
+Ensure you run gendock from your working directory i.e. one that contains receptors in a directory named **receptors**. The following commands should be followed to run GenDock:
 
 ```
 import gendock as gd
 gd.generate(name, target_mass, nligands=X, mol=rdkit.Chem.rdchem.Mol)
-gd.dock(name, ligand_num=Y, r1='XXX', r2='YYY', r3='ZZZ')
+gd.dock(name, ligand_num=Y, receptors=['receptor1', 'receptor2', 'receptor3'])
 ```
 where:
  
@@ -51,7 +51,7 @@ m = Chem.MolFromSmiles('[*]c1cccc[*]c1')
 gd.generate('test', 150, mol=m)
 ```
 
-***optional***, **r1, r2, r3** are the names of the receptor files, i.e. 1ELN (do not include the '.pdbqt' in this). You must give the name of at least one receptor and can define up to three.
+***optional***, **receptors** are the names of the receptor files, i.e. 1ELN (do not include the '.pdbqt' in this). This must be a list, even if you are only using one receptor.
 
 ***optional***, **ligand_num** is the ligand that you want to start with. This is useful if you have generated 1000 ligands and then got cut off after docking 500 of them. Set this to 501 and it will carry on from where it left off.
 
@@ -60,7 +60,13 @@ gd.generate('test', 150, mol=m)
 GenDock will save a CSV file in the **data/exp_name/** directory that will contain the SMILES string of the ligand as well as other chemical properies, and the best binding energy for each receptor. GenDock stores the results of the AutoDock Vina screening in the **vina_files** directory. Inside each directory is both the PDBQT files and the LOG file. These are named as **ligand_X-r.pdbqt or .txt** where X is the ligand number and r is the receptor name.
 
 ## Functional Groups
-Functional groups can be found in **scripts/functional_groups.py** as a list of SMILES strings. This file can be edited to add new functional groups.
+Functional groups can be found in **scripts/functional_groups.py** as a list of SMILES strings. They are imported as **s_list**, **nt_list** and **t_list** and can be edited just like any another python list before running gendock.
+
+```
+import gendock as gd
+gd.s_list.append('CCC[*]')
+gd.s_list.remove('CCC[*]')
+```
 
 ## References
 

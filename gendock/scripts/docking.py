@@ -9,7 +9,7 @@ import sys
 def osCommand(command):
     c  = subprocess.Popen(command, shell=True)
     try:
-        c.wait()
+        c.wait(120)
     except subprocess.TimeoutExpired:
         print("Command timed out")
         c.kill()
@@ -61,22 +61,19 @@ def convertMol(pdb, pdbqt):
     obCon.WriteFile(mol, pdbqt)
     os.remove(pdb)
 
-def docking(pdb_file, pdbqt_file, receptors, vina_files_dir, molnum):
-    convertMol(pdb_file, pdbqt_file)
+def docking(pdbqt_file, receptors, vina_files_dir, molnum):
     recept_num = 0
     for receptor in receptors:
         # run vina
         print("Docking ligand " + str(molnum) + " with " + receptor)
         f_out_pdbqt = os.path.join(vina_files_dir, 'ligand_' + str(molnum) + '-' + str(receptor) + '.pdbqt')
         f_out_log = os.path.join(vina_files_dir, 'ligand_' + str(molnum) + '-' + str(receptor) + '.txt')
-        try:
-            # python = sys.executable.split(os.sep)
-            # vina = os.path.join(os.sep, *python[:-1], 'vina')
-            rpath = os.path.join('receptors', receptor)
-            vina_command = 'vina --config ' + rpath + '-config.txt --ligand ' + pdbqt_file + ' --out ' + f_out_pdbqt + ' --log ' + f_out_log
-            osCommand(vina_command)
-        except Exception:
-            pass
+        # python = sys.executable.split(os.sep)
+        # vina = os.path.join(os.sep, *python[:-1], 'vina')
+        rpath = os.path.join('receptors', receptor)
+        vina_command = 'vina --config ' + rpath + '-config.txt --ligand ' + pdbqt_file + ' --out ' + f_out_pdbqt + ' --log ' + f_out_log
+        print(vina_command)
+        osCommand(vina_command)
         recept_num += 1
 
 def moldocking(name, start_ligand, receptors):
@@ -92,14 +89,12 @@ def moldocking(name, start_ligand, receptors):
     molnum = 1
     for mol in suppl:
         if molnum >= start_ligand:
-            try:
-                AllChem.EmbedMolecule(mol)
-                AllChem.UFFOptimizeMolecule(mol)
-                AllChem.MolToPDBFile(mol, pdb_file)
-                docking(pdb_file, pdbqt_file, receptors, vina_files_dir, molnum)
-                os.remove(pdbqt_file)
-            except Exception:
-                print('Failed to dock ligand '+str(molnum)+'. Skipping...')
+            AllChem.EmbedMolecule(mol)
+            AllChem.UFFOptimizeMolecule(mol)
+            AllChem.MolToPDBFile(mol, pdb_file)
+            convertMol(pdb_file, pdbqt_file)
+            docking(pdbqt_file, receptors, vina_files_dir, molnum)
+            os.remove(pdbqt_file)
             process(mol, receptors, molnum, name)
         else:
             pass
