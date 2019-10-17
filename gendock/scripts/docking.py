@@ -41,7 +41,10 @@ def process(mol, receptors, l_num, name):
         temp_array.append('N/A')
     for receptor in receptors:
         ligand_file = os.path.join('data', str(name), 'vina_files', 'ligand_'+str(l_num)+'-'+receptor+'.pdbqt')
-        temp_array.append(str(get_energy(ligand_file)))
+        try:
+            temp_array.append(str(get_energy(ligand_file)))
+        except Exception:
+            temp_array.append('N/A')
     csv_fname = str(name)+"_results.csv"
     csv_file = os.path.join('data', name, csv_fname)
     with open(csv_file, "a") as f:
@@ -92,9 +95,15 @@ def moldocking(name, start_ligand, receptors):
             AllChem.EmbedMolecule(mol)
             AllChem.UFFOptimizeMolecule(mol)
             AllChem.MolToPDBFile(mol, pdb_file)
-            convertMol(pdb_file, pdbqt_file)
-            docking(pdbqt_file, receptors, vina_files_dir, molnum)
-            os.remove(pdbqt_file)
+            conv = False
+            try:
+                convertMol(pdb_file, pdbqt_file)
+                conv = True
+            except Exception:
+                pass
+            if conv is True:
+                docking(pdbqt_file, receptors, vina_files_dir, molnum)
+                os.remove(pdbqt_file)
             process(mol, receptors, molnum, name)
         else:
             pass

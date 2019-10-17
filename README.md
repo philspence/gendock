@@ -44,6 +44,8 @@ where:
 
 **target_mass** is the appproximate mass of the molecules that you want to generate.
 
+**receptors** are the names of the receptor files, i.e. 1ELN (do not include the '.pdbqt' in this). This must be a list, even if you are only using one receptor.
+
 ***optional***, **nligands** is the number of molecules you want to generate, if an argument is given, all possible molecules will be generated (this can range into the tens of millions of molecules - *be warned*). If a number is given, then that amount of molecules will be randomly chosen from the possible molecules that could be generated.
 
 ***optional***, **mol** is an RDKit mol object that contains wildcard atoms i.e '`[*]`' atoms. For example one could generate an RDKit mol by the following:
@@ -54,7 +56,6 @@ m = Chem.MolFromSmiles('[*]c1cccc[*]c1')
 gd.generate('test', 150, mol=m)
 ```
 
-***optional***, **receptors** are the names of the receptor files, i.e. 1ELN (do not include the '.pdbqt' in this). This must be a list, even if you are only using one receptor.
 
 ***optional***, **ligand_num** is the ligand that you want to start with. This is useful if you have generated 1000 ligands and then got cut off after docking 500 of them. Set this to 501 and it will carry on from where it left off.
 
