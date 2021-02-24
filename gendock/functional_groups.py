@@ -1,4 +1,20 @@
-# starting functional groups
+from rdkit.Chem import MolFromSmiles
+from gendock.docking import DockMol
+from random import choice
+
+
+class FGLibrary:
+    def __init__(self, fgs, position):
+        self.position = position
+        self.fgs = fgs
+        return
+
+    def get_random(self):
+        return choice(self.fgs)
+
+    def return_all(self):
+        return self.fgs
+
 
 s_list = [
     "[*]c1ccccc1",
@@ -24,6 +40,8 @@ s_list = [
     "C1([*])=NC(C=CN2)=C2C=C1",
 ]
 
+
+start_fg = FGLibrary([DockMol(MolFromSmiles(i)) for i in s_list], 'start')
 # non-terminal groups
 
 nt_list = [
@@ -46,6 +64,8 @@ nt_list = [
     "CC[*]",
     "N1CCN([*])CC1",
 ]
+
+mid_fg = FGLibrary([DockMol(MolFromSmiles(i)) for i in nt_list], 'mid')
 
 # terminal groups
 
@@ -79,3 +99,5 @@ t_list = [
     "C1CC(O)C(CO)C1",
     "C1CC1"
 ]
+
+terminal_fg = FGLibrary([DockMol(MolFromSmiles(i)) for i in t_list], 'terminal')
