@@ -15,35 +15,22 @@ def os_command(command):
         c.kill()
 
 
-def export_pdbqt(path, file_name):
+def export_pdbqt(file_name):
     ob_con = ob.OBConversion()
     ob_con.SetInAndOutFormats('pdb', 'pdbqt')
     mol = ob.OBMol()
-    ob_con.ReadFile(mol, Path(path, f'{file_name}.pdb').as_posix())
-    ob_con.WriteFile(mol, Path(path, f'{file_name}.pdbqt').as_posix())
-    Path('temp.pdb').unlink()
-    return Path('temp.pdbqt')
+    ob_con.ReadFile(mol, Path(f'{file_name}.pdb').as_posix())
+    ob_con.WriteFile(mol, Path(f'{file_name}.pdbqt').as_posix())
+    return Path(f'{file_name}.pdbqt')
 
 
 class DockMol:
-    def __init__(self, mol):
-        self.previous_docking_energy = 0
+    def __init__(self, mol, prev):
+        self.previous_docking_energy = prev
         self.docking_energy = 0
         self.product = None
-        self.mol = mol
-        return
-
-    def dock_mol(self):
-        EmbedMolecule(self.mol)
-        MolToPDBFile(self.mol, Path('temp.pdb').as_posix())
-        pdbqt_file = export_pdbqt(Path('temp.pdb'), 'temp')
-        f_out_pdbqt = Path(pdbqt_file.parent, 'temp-out.pdbqt')
-        f_out_log = Path(pdbqt_file.parent, 'temp-out.txt')
-        receptor = ''
-        rpath = Path('receptors', receptor)
-        vina_command = f"vina --config {rpath}-config.txt --ligand {pdbqt_file} --out {f_out_pdbqt} --log {f_out_log}"
-        os_command(vina_command)
-        self.get_energy()
+        self.rdmol = mol
+        self.predicted_energy = 0
 
     def get_energy(self):
         line = Path('temp-out.pdbqt').open(mode='r').readlines()[1]
@@ -51,11 +38,16 @@ class DockMol:
         self.docking_energy = result
 
     def join(self, next_group):
-        self.previous_docking_energy = self.docking_energy
-        rxn = ReactionFromSmarts('[#0:1].[#0:2]>>[#0:1]-[#0:2]')
-        product = rxn.RunReaction(self.mol, next_group.mol)[0][0]
+        rxn = ReactionFromSmarts('[*:1][#0:2].[#0:3][#0:4][*:5]>>[*:1]-[*:5].[#0:2][#0:3][#0:4]')
+        product = rxn.RunReactants((self.rdmol, next_group.rdmol))[0][0]
         SanitizeMol(product)
-        return DockMol(product)
+        return DockMol(product, self.previous_docking_energy)
+
+    def cap_with_h(self):
+        rxn = ReactionFromSmarts('[*:1]-[#0:2].[H:3]>>[*:1]-[H:3].[#0:2]')
+        product = rxn.RunReactant(self.rdmol, 0)[0][0]
+        SanitizeMol(product)
+        return product
 
 
 class Receptor:
@@ -65,19 +57,18 @@ class Receptor:
         self.path = Path(self.dir, f"{name}.pdbqt")
         self.sequence = None
         if not self.path.exists():
-            self.pdb_to_pdbqt()
+            print('Receptor not found, place .pdbqt file in the receptors directory.')
+            exit()
         self.get_sequence()
 
-    def pdb_to_pdbqt(self):
-        export_pdbqt(self.dir, self.name)
-
     def dock_mol(self, mol):
-        EmbedMolecule(mol)
-        MolToPDBFile(mol, Path('temp.pdb').as_posix())
-        pdbqt_file = export_pdbqt(Path('temp.pdb'), 'temp')
+        dock_mol = mol.cap_with_h()
+        EmbedMolecule(dock_mol)
+        MolToPDBFile(dock_mol, Path('temp.pdb').as_posix())
+        pdbqt_file = export_pdbqt('temp')
         f_out_pdbqt = Path(pdbqt_file.parent, 'temp-out.pdbqt')
         f_out_log = Path(pdbqt_file.parent, 'temp-out.txt')
-        vina_command = f"vina --config {self.path}-config.txt --ligand {pdbqt_file} --out {f_out_pdbqt} " \
+        vina_command = f"vina --config {self.dir}/{self.name}-config.txt --ligand {pdbqt_file} --out {f_out_pdbqt} " \
                        f"--log {f_out_log}"
         os_command(vina_command)
         mol.get_energy()
@@ -85,13 +76,13 @@ class Receptor:
     def create_config(self, center, size):
         x_center, y_center, z_center = center
         x_size, y_size, z_size = size
-        config_txt = f"receptor = {self.path}\n" \
-                     f"center_x = {x_center}\n\n" \
+        config_txt = f"receptor = {self.path}\n\n" \
+                     f"center_x = {x_center}\n" \
                      f"center_y = {y_center}\n" \
                      f"center_z = {z_center}\n\n" \
                      f"size_x = {x_size}\n" \
                      f"size_y = {y_size}\n" \
-                     f"size_z = {z_center}"
+                     f"size_z = {z_size}"
         Path(self.dir, f"{self.name}-config.txt").open(mode='w').write(config_txt)
 
     def get_sequence(self):
@@ -100,7 +91,7 @@ class Receptor:
         one_letter = ['A', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'K', 'L', 'M', 'N', 'P', 'Q', 'R', 'S', 'T', 'V', 'W',
                       'Y']
         three_to_one = dict(zip(three_letter, one_letter))
-        char_to_int = dict((c, i) for i, c in enumerate(three_letter))
+        char_to_int = dict((c, i) for i, c in enumerate(one_letter))
         lines = [l for l in self.path.open(mode='r').readlines() if l.startswith('ATOM')]
         res_num = list()
         for line in lines:

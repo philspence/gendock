@@ -1,5 +1,0 @@
-numpy~=1.19.2
-rdkit~=2020.09.4
-openbabel~=3.1.1
-setuptools~=52.0.0
-keras~=2.4.3
