@@ -16,19 +16,19 @@ cp path/to/receptor.pdbqt receptors/receptor.pdbqt
 
 ## Running GenDock
 
+```
 Arguments:
-
 -r receptor name (no extension)
-
 -c centre of the search grid that vina will use
-
 -s size of the search grid that vina will use
+```
 
 `python gendock.py -r receptor -c 0 0 0 -s 20 20 20`
 
 ## Results
 
-GenDock will save a CSV file in the **data/exp_name/** directory that will contain the SMILES string of the ligand as well as other chemical properies, and the best binding energy for each receptor. GenDock stores the results of the AutoDock Vina screening in the **vina_files** directory. Inside each directory is both the PDBQT files and the LOG file. These are named as **ligand_X-r.pdbqt or .txt** where X is the ligand number and r is the receptor name.
+GenDock will save a CSV file in the **data** directory that will contain the SMILES string of the ligand, the name 
+of the receptor, the binding energy calculated from vina and the predicted energy (0 for those that aren't predicted). 
 
 ## References
 

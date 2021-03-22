@@ -1,5 +1,5 @@
 from pathlib import Path
-from rdkit.Chem.AllChem import EmbedMolecule, MolToPDBFile, SanitizeMol, MolFromPDBFile
+from rdkit.Chem.AllChem import EmbedMolecule, MolToPDBFile, SanitizeMol, MolFromPDBFile, MolToSmiles
 from rdkit.Chem.rdChemReactions import ReactionFromSmarts
 from openbabel import openbabel as ob
 from subprocess import Popen, TimeoutExpired
@@ -32,6 +32,7 @@ class DockMol:
         self.product = None
         self.rdmol = mol
         self.predicted_energy = 0
+        self.docking_mol = None
 
     def get_energy(self):
         line = Path('temp-out.pdbqt').open(mode='r').readlines()[1]
@@ -50,6 +51,10 @@ class DockMol:
         SanitizeMol(product)
         return product
 
+    def export_data(self, r_name):
+        data = f'{MolToSmiles(self.docking_mol)}, {r_name}, {self.docking_energy}, {self.predicted_energy}\n'
+        Path('data', f'{r_name}_data.csv').open(mode='a').write(data)
+
 
 class Receptor:
     def __init__(self, name):
@@ -65,6 +70,7 @@ class Receptor:
     def dock_mol(self, mol):
         dock_mol = mol.cap_with_h()
         EmbedMolecule(dock_mol)
+        mol.docking_mol = dock_mol
         MolToPDBFile(dock_mol, Path('temp.pdb').as_posix())
         pdbqt_file = export_pdbqt('temp')
         f_out_pdbqt = Path(pdbqt_file.parent, 'temp-out.pdbqt')
@@ -74,6 +80,7 @@ class Receptor:
         print(vina_command)
         c = os_command(vina_command)
         mol.get_energy()
+        mol.export_data(self.name)
 
     def create_config(self, center, size):
         x_center, y_center, z_center = center

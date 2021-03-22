@@ -4,6 +4,7 @@ from gendock.docking import DockMol, Receptor
 from gendock.learn import Predictor, assess_mols
 from rdkit.Chem import MolToSmiles
 from pathlib import Path
+from rdkit.Chem import MolToSmiles
 
 
 def main(r, c, s):
@@ -11,6 +12,9 @@ def main(r, c, s):
     receptor = Receptor(r)
     receptor.create_config(center=c, size=s)
     func_groups = load_functional_groups()
+    if not Path('data').exists():
+        Path('data').mkdir()
+    Path('data', f'{r}_data.csv').open(mode='w').write(f'SMILES, Receptor, Vina Energy, Predicted Energy\n')
     complete = False
     completed_mols = list()
     mols = func_groups['starter_fg'].return_all()
