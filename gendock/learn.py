@@ -1,6 +1,6 @@
 from gendock.lipinski import check_lipinski
-from keras.models import Sequential
-from keras.layers import Embedding, Flatten, Dense, Input, Masking, Concatenate
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Embedding, Flatten, Dense, Input, Masking, Concatenate
 from rdkit.Chem.AllChem import GetMorganFingerprintAsBitVect
 import numpy as np
 from pathlib import Path

@@ -3,13 +3,14 @@ from rdkit.Chem.AllChem import EmbedMolecule, MolToPDBFile, SanitizeMol, MolFrom
 from rdkit.Chem.rdChemReactions import ReactionFromSmarts
 from openbabel import openbabel as ob
 from subprocess import Popen, TimeoutExpired
-from keras.preprocessing.sequence import pad_sequences
+from tensorflow.keras.preprocessing.sequence import pad_sequences
 
 
 def os_command(command):
     c = Popen(command, shell=True)
     try:
         c.wait(120)
+        return c
     except TimeoutExpired:
         print("Command timed out")
         c.kill()
@@ -70,7 +71,8 @@ class Receptor:
         f_out_log = Path(pdbqt_file.parent, 'temp-out.txt')
         vina_command = f"vina --config {self.dir}/{self.name}-config.txt --ligand {pdbqt_file} --out {f_out_pdbqt} " \
                        f"--log {f_out_log}"
-        os_command(vina_command)
+        print(vina_command)
+        c = os_command(vina_command)
         mol.get_energy()
 
     def create_config(self, center, size):
